@@ -1,0 +1,89 @@
+Great—thanks for sharing both the **Raw Text Extraction** and your **Parsed Data Object**, Dato’ CEO.  
+I validated each field against the image you provided and suggested a couple of light normalizations so the output is production‑ready for KYC.
+
+***
+
+## ✅ What’s correct (good to keep)
+
+*   **companyName** → `ANALOG DATA SDN BHD` ✅
+*   **registrationNumber (new 12‑digit)** → `190933432134` ✅
+*   **oldRegistrationNumber (ROC)** → `1234567-H` ✅
+*   **type** → `Sdn. Bhd. (Private Limited)` ✅ (correct for Form 9)
+*   **issuePlace** → `KL` ✅
+*   **issueDate** & **registrationDate** → `2007-06-07` ✅
+*   **signingOfficer** → `DATUK NOR AZIMAH ABDUL AZIZ` ✅ (your raw text already has the correct full name—nice!)
+
+Fields that are **expected to be empty** on standard Form 9 (so your empty values are correct):
+
+*   **validUntil** → `""`
+*   **registeredAddress** → `""`
+*   **branchAddresses** → `[]`
+
+> Form 9 typically doesn’t print the registered office address or any validity period—the certificate is a record of incorporation, not a license with expiry.
+
+***
+
+## ⚠️ Minor OCR artifacts (for awareness only)
+
+*   Ordinal lost: raw shows **“7 day”** instead of **“7th day”** (common with superscripts).
+*   Footer/header noise (logos, watermark, QR area) introduces typos like “vorlly”, “Thess”, etc.—these are irrelevant to your parsed fields and can be ignored.
+
+No corrections are necessary to your final fields because you already normalized the dates and names properly.
+
+***
+
+## ✨ Recommended normalized JSON (drop‑in)
+
+If you want a slightly richer, structured object for downstream systems while preserving your keys, here’s a cleaned version that includes a **document header** and **legal references**, but keeps your core schema intact:
+
+```json
+{
+  "docType": "FORM_9",
+  "documentTitle": "Certificate of Incorporation of Private Company",
+  "legalBasis": {
+    "primaryAct": "Companies Act 2016 (Act 777)",
+    "incorporationReference": "Companies Act 1965"
+  },
+  "companyName": "ANALOG DATA SDN BHD",
+  "type": "Sdn. Bhd. (Private Limited)",
+  "registrationNumber": "190933432134",
+  "oldRegistrationNumber": "1234567-H",
+  "registrationDate": "2007-06-07",
+  "validUntil": "",
+  "registeredAddress": "",
+  "branchAddresses": [],
+  "issuePlace": "KL",
+  "issueDate": "2007-06-07",
+  "signingOfficer": "DATUK NOR AZIMAH ABDUL AZIZ",
+  "qrPayload": "",
+  "confidence": 0.8726,
+  "sourceFile": "sample-cert-form-9-SDN-BHD.jpg",
+  "notes": [
+    "Ordinals normalized (7th).",
+    "Registered address and validity are typically not present on Form 9."
+  ]
+}
+```
+
+***
+
+## 🔧 (Optional) Small hardening tips you can apply in code
+
+1.  **Ordinal normalization**  
+    If a date line matches `Dated at <place> this <d> day of <Month> <YYYY>`, force the `d → dth` form for readability in any human‑facing output (you already store ISO `YYYY-MM-DD`, which is perfect for systems).
+
+2.  **Issue place canonicalization**  
+    Map common OCR confusions (`KE`, `K1`, `K|`) to `KL` only when preceded by `Dated at` and followed by `this`—keeps corrections precise.
+
+3.  **Officer line extraction**  
+    Always take the **line above** the one containing `REGISTRAR OF COMPANIES` as the officer’s name, then trim & title‑case; it’s the most stable heuristic across Form 9 scans.
+
+4.  **QR payload**  
+    If you want to capture QR values when available, add a pyzbar decode step. Keep it optional—many scans will not decode perfectly due to compression or watermark overlays.
+
+***
+
+## ✅ Bottom line
+
+Your **Parsed Data Object** is already **accurate and production‑ready** for this image.  
+If you’d like, I can fold these normalizations and heuristics into your extractor so every Form 9 you process lands in this clean, consistent shape. Want me to push a patched `extract_form_9` and endpoint response that emits the normalized JSON above?

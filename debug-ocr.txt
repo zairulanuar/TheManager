@@ -1,0 +1,150 @@
+Looking at your scripts and sample data, I can identify several issues that need to be fixed:
+
+## Issues Found:
+
+### 1. **Case-insensitive string splitting is not working properly**
+   In multiple extractors, you're using `split("certify that")` which is case-sensitive. You should use `lower()` and `find()` consistently.
+
+### 2. **Registration number pattern issues**
+   - In the sample Form 9: `190933432134（1234567-H)` has special parentheses `（）` not `()`
+   - The old number extraction might fail with these special characters
+
+### 3. **Address extraction stopping conditions are too strict**
+   Some stop conditions might trigger too early.
+
+### 4. **Date parsing might fail with ordinal suffixes**
+   Your regex might not handle all ordinal variations properly.
+
+## Here are the fixes:
+
+### **rules_base.py** - Fix regex patterns:
+
+```python
+# Update RE_DATE to better handle ordinals and variations
+RE_DATE = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:day\s+of\s+)?([A-Za-z\.]+)\s+(\d{4})\b", re.I)
+
+# Update normalize_text to handle special characters
+def normalize_text(t: str) -> str:
+    t = t.replace("’","'").replace("–","-").replace("—","-").replace("（","(").replace("）",")")
+    return "\n".join([ln.strip() for ln in t.splitlines() if ln.strip()])
+
+# Update pick_old_no to handle special parentheses
+def pick_old_no(text: str):
+    # First normalize special characters
+    text = text.replace("（","(").replace("）",")")
+    for pat in (RE_OLD_ROC, RE_OLD_ROB, RE_LLP_LEG):
+        m = pat.search(text)
+        if m:
+            return re.sub(r"\s+", "", m.group(0))
+    return None
+```
+
+### **form_9.py** - Fix case-insensitive splitting:
+
+```python
+def extract_form_9(lines: list) -> dict:
+    blocks = [ln for ln in lines if ln.strip()]
+    text = normalize_text("\n".join(blocks))
+    fields = {
+        "doc_type": "FORM_9",
+        "entity_name": None,
+        "business_type": "Sdn. Bhd. (Private Limited)",
+        "registration_number_new": pick_new_no(text),
+        "registration_number_old": pick_old_no(text),
+        "incorporation_or_registration_date": None,
+        "valid_until": None,
+        "registered_address": None,
+        "branch_addresses": [],
+        "issue_place": None,
+        "issue_date": None,
+        "signing_officer": None
+    }
+
+    # Company name appears prominently after "This is to certify that"
+    for i, ln in enumerate(blocks):
+        lower_ln = ln.lower()
+        if "certify that" in lower_ln:
+            idx = lower_ln.find("certify that")
+            if idx != -1:
+                candidate = ln[idx + len("certify that"):].strip()
+            else:
+                candidate = ""
+            
+            # If candidate is empty or just punctuation, look at next line
+            if not candidate or len(candidate) < 3:
+                j = i+1
+                while j < len(blocks) and not blocks[j].strip():
+                    j += 1
+                if j < len(blocks): 
+                    candidate = blocks[j].strip()
+            
+            if candidate:
+                # Cleanup: remove registration numbers if they were captured in the name line
+                # Normalize special parentheses first
+                candidate = candidate.replace("（","(").replace("）",")")
+                if fields["registration_number_new"]:
+                    candidate = candidate.replace(fields["registration_number_new"], "")
+                if fields["registration_number_old"]:
+                    candidate = candidate.replace(fields["registration_number_old"], "")
+                
+                # Remove parens wrapping the old number if they were left behind
+                candidate = candidate.replace("()", "").replace("(-)", "")
+                
+                fields["entity_name"] = candidate.strip(" ,.-")
+            break
+    
+    if not fields["entity_name"]:
+        caps = [ln for ln in blocks if ln.strip().isupper() and len(ln.strip()) > 5]
+        fields["entity_name"] = sorted(caps, key=len, reverse=True)[0] if caps else None
+
+    # Rest of the function remains similar...
+```
+
+### **form_d.py** - Similar fix for case-insensitive search:
+
+```python
+def extract_form_d(lines: list) -> dict:
+    blocks = [ln for ln in lines if ln.strip()]
+    text = normalize_text("\n".join(blocks))
+    fields = {
+        "doc_type": "FORM_D",
+        "entity_name": None,
+        "business_type": "Enterprise",
+        "registration_number_new": pick_new_no(text),
+        "registration_number_old": pick_old_no(text),
+        "incorporation_or_registration_date": None,
+        "valid_until": None,
+        "registered_address": None,
+        "branch_addresses": [],
+        "issue_place": None,
+        "issue_date": None,
+        "signing_officer": None
+    }
+
+    # Entity name line usually after "under the name"
+    for i, ln in enumerate(blocks):
+        lower_ln = ln.lower()
+        if "under the name" in lower_ln:
+            idx = lower_ln.find("under the name")
+            if idx != -1:
+                candidate = ln[idx + len("under the name"):].strip()
+            else:
+                candidate = ""
+            
+            if not candidate or len(candidate) < 3:
+                 if i+1 < len(blocks): 
+                     candidate = blocks[i+1].strip()
+            
+            if candidate:
+                 fields["entity_name"] = candidate.strip(" :.-")
+            break
+    # Rest of the function remains similar...
+```
+
+### **Additional Recommendations:**
+
+1. **Debug logging**: Add print statements to see what's being captured
+2. **Test with your samples**: Run the scripts with the sample text you provided
+3. **Handle OCR errors**: Consider fuzzy matching for key phrases since OCR might produce errors
+
+The main issue is that the scripts expect perfect text extraction, but OCR often introduces variations in spacing, case, and special characters. The fixes above should make your scripts more robust.

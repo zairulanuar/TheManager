@@ -1,0 +1,204 @@
+Dato’ CEO, I’ve reviewed the uploaded **SSM Corporate Profile** and summarized **everything that’s directly usable for KYC/AML** purposes, plus gaps and next‑step checks. All items below are extracted from the file you provided (Printing Date: **19/11/2025**) unless noted otherwise. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+***
+
+## 1) Company Identifiers & Status (Core KYC)
+
+*   **Entity name:** MAP PROPERTIES SDN. BHD. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Company No.:** 201501019183 (**1144519‑K**) [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Legal form:** Private Limited Company (Limited by Shares) [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Status:** Existing [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Country of incorporation:** Malaysia [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Incorporation date:** **15‑05‑2015** (appears under “Date of Change / Incorporation Date”) [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** These anchor the entity in your system (unique ID, form, and current status).
+
+***
+
+## 2) Registered & Business Addresses
+
+*   **Registered Address:** *B06, Tingkat 1, Jalan Bukit Sekilau, 25200 Kuantan, Pahang, Malaysia* [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Business Address:** *A‑6774, Jalan Dato Bahaman, 25250 Kuantan, Pahang* [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Address verification (proof of registration/operating location), risk scoring by geography, and correspondence.
+
+***
+
+## 3) Nature of Business (Activities)
+
+*   **1. Growing of Maize** [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **2. Quarrying, Supplying and Selling Stones** [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Sector risk assessment (agriculture & quarrying), licensing expectations, and sanctions/export‑control relevance.
+
+***
+
+## 4) Issued Share Capital
+
+*   **Ordinary (cash):** **RM 1,000,002.00** total issued; no preference/others reported. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Financial substance indicator; helps reconcile ownership percentages and capital adequacy.
+
+***
+
+## 5) Shareholders / Members (Beneficial Ownership)
+
+**Total ordinary shares = 1,000,002** (sums to 100%). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+| Shareholder         | ID (IC)        |  Shares |                                                                                                                                                                                                    % |
+| ------------------- | -------------- | ------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| **CHONG SIW CHIN**  | 710615‑08‑5992 | 650,001 | **65.0001%** [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf) |
+| **CHONG WOEI SOON** | 980202‑38‑5495 | 350,000 | **34.9999%** [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf) |
+| **LEE YUAN YIN**    | 710402‑06‑5330 |       1 |  **0.0001%** [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf) |
+
+**Ultimate Beneficial Owners (≥25%)**
+
+*   **CHONG SIW CHIN — 65.0001%** (individual) [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **CHONG WOEI SOON — 34.9999%** (individual) [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Identify UBOs for verification, screening (sanctions/PEP/adverse), and enhanced due diligence (EDD) thresholds.
+
+***
+
+## 6) Directors / Officers (Control Persons)
+
+*   **Directors**
+    *   **CHONG SIW CHIN**, IC **710615‑08‑5992**, appt **01‑08‑2019**; address listed in Chemor, Perak (31200). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+    *   **CHONG WOEI SOON**, IC **980202‑38‑5495**, appt **04‑04‑2024**; address in Kuantan, Pahang (25250). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+    *   **MAZLAN BIN MOHD NOOR**, IC **740227‑06‑5049**, appt **13‑11‑2025**; address in Kuantan, Pahang (25200). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Company Secretary**
+    *   **ROSTILA BINTI IBRAHIM**, IC **771020‑06‑5908**, appt **04‑11‑2024**; address in Kuantan, Pahang (25000). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Control persons for screening, authority validation (board resolutions), and signing rights checks.
+
+***
+
+## 7) Charges / Securities
+
+*   **Company Charges:** *No information* (none recorded in this profile). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Collateral/encumbrance check; may affect credit/risk posture.
+
+***
+
+## 8) Financial Snapshot (as reported)
+
+*   **Issued share capital (per capital section):** RM **1,000,002.00** (reaffirmed). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Financial year end (FYE):** **30‑06‑2022** (with **Date of Tabling: 31‑07‑2023**); **Consolidated accounts: No**. *(OCR layout is dense but values are visible in the “Summary of Financial Information”.)* [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   **Retained earnings:** **–15,148.00**; **Revenue:** **–2,634.00**; **PBT/PAT:** **–2,634.00**; **Auditor:** **S. THIAGARAJAH & CO. (AF0579)**, *B‑24, Tingkat 1, Jalan Haji Ahmad 4, Sri Pahang Business Center, 25300 Kuantan, Pahang*. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Basic financial health indicator; auditor trail for assurance; determine if EDD is warranted.
+
+***
+
+## 9) Provenance & Freshness
+
+*   **This information is from company documents registered as at 18‑11‑2025; Registrar dated 19‑11‑2025; printing date 19/11/2025.** [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+> **KYC use:** Demonstrates recency and official source (MYDATA SSM).
+
+***
+
+### 🧾 Machine‑Readable Output (ready for your KYC engine)
+
+```json
+{
+  "entity": {
+    "name": "MAP PROPERTIES SDN. BHD.",
+    "companyNumber": "201501019183",
+    "oldNumber": "1144519-K",
+    "jurisdiction": "MY",
+    "legalForm": "Private Limited (Ltd by shares)",
+    "status": "Existing",
+    "incorporationDate": "2015-05-15",
+    "source": {
+      "document": "SSM Corporate Profile",
+      "printedAt": "2025-11-19",
+      "asAt": "2025-11-18"
+    }
+  },
+  "addresses": {
+    "registered": {
+      "line1": "B06, Tingkat 1, Jalan Bukit Sekilau",
+      "city": "Kuantan",
+      "state": "Pahang",
+      "postcode": "25200",
+      "country": "Malaysia"
+    },
+    "business": {
+      "line1": "A-6774, Jalan Dato Bahaman",
+      "city": "Kuantan",
+      "state": "Pahang",
+      "postcode": "25250",
+      "country": "Malaysia"
+    }
+  },
+  "activities": [
+    "Growing of Maize",
+    "Quarrying, Supplying and Selling Stones"
+  ],
+  "capital": {
+    "issuedShareCapitalMYR": 1000002.00,
+    "classes": [
+      {"class": "Ordinary", "paid": "Cash", "amountMYR": 1000002.00}
+    ]
+  },
+  "shareholders": [
+    {"name": "CHONG SIW CHIN", "idType": "NRIC", "idNo": "710615-08-5992", "shares": 650001, "percent": 65.0001},
+    {"name": "CHONG WOEI SOON", "idType": "NRIC", "idNo": "980202-38-5495", "shares": 350000, "percent": 34.9999},
+    {"name": "LEE YUAN YIN", "idType": "NRIC", "idNo": "710402-06-5330", "shares": 1, "percent": 0.0001}
+  ],
+  "ubo": [
+    {"name": "CHONG SIW CHIN", "percent": 65.0001, "basis": "Direct shareholding >=25%"},
+    {"name": "CHONG WOEI SOON", "percent": 34.9999, "basis": "Direct shareholding >=25%"}
+  ],
+  "officers": {
+    "directors": [
+      {"name": "CHONG SIW CHIN", "idNo": "710615-08-5992", "appointed": "2019-08-01"},
+      {"name": "CHONG WOEI SOON", "idNo": "980202-38-5495", "appointed": "2024-04-04"},
+      {"name": "MAZLAN BIN MOHD NOOR", "idNo": "740227-06-5049", "appointed": "2025-11-13"}
+    ],
+    "secretaries": [
+      {"name": "ROSTILA BINTI IBRAHIM", "idNo": "771020-06-5908", "appointed": "2024-11-04"}
+    ]
+  },
+  "charges": [],
+  "financials": {
+    "fye": "2022-06-30",
+    "dateOfTabling": "2023-07-31",
+    "consolidated": false,
+    "revenue": -2634.00,
+    "profitBeforeTax": -2634.00,
+    "profitAfterTax": -2634.00,
+    "retainedEarnings": -15148.00,
+    "auditor": "S. THIAGARAJAH & CO. (AF0579)",
+    "auditorAddress": "B-24, Tingkat 1 Jalan Haji Ahmad 4, Sri Pahang Business Center, 25300, Kuantan, Pahang"
+  }
+}
+```
+
+> All values above come from the uploaded Corporate Profile. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+***
+
+## 10) KYC Gaps & Recommended Follow‑ups
+
+1.  **Screening:** Run sanctions/PEP/adverse‑media screening on the **entity** and all **UBOs/directors/secretary** (names + NRIC). *(I can run a structured screening list for you.)*
+2.  **ID Verification:** If onboarding individuals (UBOs/directors), collect **NRIC images** + **liveness/selfie**; verify against NRD/ekyc provider.
+3.  **Address Proof:** Obtain utility bills/bank statements for **registered** and **business** addresses (if required by your policy).
+4.  **Banking Proof:** Company bank letter or statement to tie **1144519‑K** to the operating account.
+5.  **Tax & Compliance:** Request **CP55D / tax reference**, latest **Form CP204/CP204A** (if applicable), and confirm **SST**/**sales tax** registration status if relevant to operations.
+6.  **Financials:** If your policy needs recency, ask for **latest audited accounts** if FYE 2022 is considered stale, or management accounts/ytd figures. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+7.  **Authorisations:** Board resolution naming **authorised signatories**; specimen signatures; verify against directors list. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+8.  **Licensing Check** (for quarrying): validate permits/concessions where applicable.
+
+***
+
+## 11) Sanity Checks Already Performed
+
+*   Shareholder totals (**650,001 + 350,000 + 1 = 1,000,002**) match total issued shares; computed **%** accordingly. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   Officer appointments reflect recent changes (latest director on **13‑11‑2025**). [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+*   No company charges listed in the profile. [\[1144519-K_...9112025_EN | PDF\]]25_EN.pdf)
+
+***
+

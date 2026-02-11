@@ -1,0 +1,156 @@
+Dato’ CEO, excellent — your latest OCR extraction and parsed object are **very close to perfect**. Let me verify everything once more and tell you **exactly what still needs fixing** and **what you’ve successfully solved**.
+
+Below is your updated extraction + parsed object:
+
+***
+
+# ✅ Verification Report (Final Pass)
+
+## ✔️ 1. OCR Improvements (Very Good)
+
+Your OCR has significantly improved:
+
+*   **Branch address is now perfect**
+*   **Principal address normalized**
+*   **Issue date correctly restored to 2017‑03‑02**
+*   **Signing officer correctly extracted**
+*   **Noise removed from most lines**
+*   **Confidence increased to 0.9029**
+
+You’ve clearly implemented the preprocessing + PSM segmentation correctly.
+
+***
+
+# ❌ Remaining Issues (Only 3 Left)
+
+There are **three** detection issues still to fix — these are **parsing rules**, not OCR quality.
+
+***
+
+## ❌ 1. `documentTitle` still empty
+
+You should extract:
+
+    CERTIFICATE OF REGISTRATION  
+    THE REGISTRATION OF BUSINESSES ACT 1956 (ACT 197)
+
+### 🔧 **Fix (regex rule)**
+
+Look for the block between:
+
+*   `FORM D (RULE 13)`  
+    and
+*   `This is to certify`
+
+Regex example:
+
+```regex
+FORM D.*?\n(.*?)\n(.*?)\nThis is to certify
+```
+
+Then combine them into:
+
+```json
+"documentTitle": "CERTIFICATE OF REGISTRATION; THE REGISTRATION OF BUSINESSES ACT 1956 (ACT 197)"
+```
+
+***
+
+## ❌ 2. `legalBasis` is still empty
+
+Extract the Act details:
+
+    THE REGISTRATION OF BUSINESSES ACT 1956 (ACT 197)
+
+### 🔧 **Fix**
+
+Regex to capture Act name + Act number:
+
+```regex
+REGISTRATION OF BUSINESSES ACT\s+1956\s*\(ACT\s*197\)
+```
+
+Structured output:
+
+```json
+"legalBasis": {
+  "actName": "Registration of Businesses Act 1956",
+  "actNumber": "Act 197"
+}
+```
+
+***
+
+## ❌ 3. `branchAddresses` still contains `&amp;`
+
+Your OCR text is correct:  
+`15 & 17, JALAN CYBER 16 …`
+
+But parsed output still shows:
+
+    15 &amp; 17, ...
+
+This means your parser is **HTML-encoding** text after OCR.
+
+### 🔧 **Fix**
+
+Run HTML unescape:
+
+```python
+import html
+clean_text = html.unescape(raw_text)
+```
+
+Or before saving parsed JSON:
+
+```python
+branch = branch.replace("&amp;", "&")
+```
+
+***
+
+# 🎉 Everything Else is Correct
+
+Here are the fields that are now confirmed 100% accurate:
+
+| Field                          | Status |
+| ------------------------------ | ------ |
+| docType                        | ✔️     |
+| companyName                    | ✔️     |
+| registrationNumber             | ✔️     |
+| oldRegistrationNumber          | ✔️     |
+| registrationDate               | ✔️     |
+| validUntil                     | ✔️     |
+| registeredAddress              | ✔️     |
+| branchAddresses (text correct) | ✔️     |
+| issuePlace                     | ✔️     |
+| issueDate                      | ✔️     |
+| signingOfficer                 | ✔️     |
+| confidence                     | ✔️     |
+
+You're down to **formatting/business rules only**, not OCR problems.
+
+***
+
+# 📌 Final Recommendations for Your Detection Pipeline
+
+Apply these **3 parsing rule upgrades**:
+
+### **1. Extract documentTitle using block-based extraction**
+
+Between:
+
+    FORM D
+    ↓
+    This is to certify
+
+### **2. Populate legalBasis using Act regex**
+
+Very consistent across all Form D certificates.
+
+### **3. Apply HTML decode to remove &**
+
+This is from your own pipeline, not OCR.
+
+***
+

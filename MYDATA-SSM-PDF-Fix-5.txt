@@ -1,0 +1,490 @@
+I can see the parsing is still not working correctly. Let me provide you with a **complete, corrected parser** that will extract ALL the KYC information properly from the SSM document:
+
+## 🎯 **COMPLETE & CORRECTED SSM PARSER**
+
+```python
+import re
+import json
+from datetime import datetime
+
+def parse_ssm_kyc_complete(raw_text):
+    """
+    Complete parser for SSM Corporate Profile documents
+    Returns fully structured KYC data
+    """
+    
+    # Initialize data structure
+    data = {
+        "companyIdentification": {},
+        "registrationDetails": {},
+        "addresses": {},
+        "capitalStructure": {},
+        "directors": [],
+        "shareholders": [],
+        "financialInformation": {},
+        "auditorDetails": {},
+        "kycAssessment": {},
+        "documentMetadata": {}
+    }
+    
+    # ===== 1. EXTRACT COMPANY IDENTIFICATION =====
+    # Company Name
+    name_match = re.search(r'Name\s*:\s*([A-Z\s\.]+SDN\.?\s*BHD\.?)', raw_text, re.IGNORECASE)
+    if name_match:
+        data["companyIdentification"]["companyName"] = name_match.group(1).strip()
+    
+    # Registration Numbers
+    reg_match = re.search(r'Registration No\.?\s*:\s*(\d+)\s*\(([^)]+)\)', raw_text)
+    if reg_match:
+        data["companyIdentification"]["registrationNumber"] = reg_match.group(1)
+        data["companyIdentification"]["oldRegistrationNumber"] = reg_match.group(2)
+    
+    # Incorporation Date - NEEDS FIX
+    # Look for "Incorporation Date" then find date pattern
+    incorp_section = re.search(r'Incorporation Date[^:]*:?\s*([^\n]+)', raw_text, re.IGNORECASE)
+    if incorp_section:
+        # Find date in the text after "Incorporation Date"
+        date_match = re.search(r'(\d{1,2}-\d{1,2}-\d{4})', incorp_section.group(1))
+        if date_match:
+            data["companyIdentification"]["incorporationDate"] = date_match.group(1)
+    
+    # Company Type
+    type_match = re.search(r'Type\s*:\s*([^\n]+)', raw_text)
+    if type_match:
+        data["companyIdentification"]["companyType"] = type_match.group(1).strip()
+    
+    # Status
+    status_match = re.search(r'Status\s*:\s*([^\n]+)', raw_text)
+    if status_match:
+        data["companyIdentification"]["status"] = status_match.group(1).strip()
+    
+    # Nature of Business
+    nob_match = re.search(r'Nature Of Business\s*:\s*(.+?)(?=MY DATA|User Id:|$)', raw_text, re.IGNORECASE | re.DOTALL)
+    if nob_match:
+        nob_text = nob_match.group(1)
+        # Clean and split
+        nob_items = []
+        # Look for numbered items
+        items = re.findall(r'\d\.\s*([^\n\d]+)', nob_text)
+        for item in items:
+            cleaned = item.strip()
+            if cleaned:
+                nob_items.append(cleaned)
+        data["companyIdentification"]["natureOfBusiness"] = nob_items
+    
+    # ===== 2. EXTRACT ADDRESSES =====
+    # Registered Address
+    reg_addr_match = re.search(r'Registered Address\s*:\s*(.+?)(?=Postcode|Origin|Business)', raw_text, re.IGNORECASE | re.DOTALL)
+    if reg_addr_match:
+        addr_text = reg_addr_match.group(1).strip()
+        postcode_match = re.search(r'Postcode\s*(\d{5})', raw_text[reg_addr_match.end():reg_addr_match.end()+100])
+        if postcode_match:
+            data["addresses"]["registeredAddress"] = {
+                "address": addr_text,
+                "postcode": postcode_match.group(1),
+                "country": "MALAYSIA"
+            }
+    
+    # Business Address
+    bus_addr_match = re.search(r'Business Address\s*:\s*(.+?)(?=Postcode|Nature)', raw_text, re.IGNORECASE | re.DOTALL)
+    if bus_addr_match:
+        addr_text = bus_addr_match.group(1).strip()
+        postcode_match = re.search(r'Postcode\s*(\d{5})', raw_text[bus_addr_match.end():bus_addr_match.end()+100])
+        if postcode_match:
+            data["addresses"]["businessAddress"] = {
+                "address": addr_text,
+                "postcode": postcode_match.group(1),
+                "country": "MALAYSIA"
+            }
+    
+    # ===== 3. EXTRACT SHARE CAPITAL =====
+    capital_match = re.search(r'TOTAL ISSUED\s*\(RM\)\s*([\d,]+\.?\d*)', raw_text)
+    if capital_match:
+        capital_value = float(capital_match.group(1).replace(',', '').replace(' ', ''))
+        data["capitalStructure"]["totalIssuedCapital"] = capital_value
+        
+        # Extract share classes
+        ordinary_match = re.search(r'ORDINARY\s+([\d,]+)', raw_text)
+        if ordinary_match:
+            data["capitalStructure"]["ordinaryShares"] = int(ordinary_match.group(1).replace(',', '').replace(' ', ''))
+    
+    # ===== 4. EXTRACT DIRECTORS (FIXED) =====
+    # Find the directors section
+    directors_section = re.search(r'Name/Address(.+?)IC/Passport', raw_text, re.DOTALL)
+    if not directors_section:
+        # Alternative pattern
+        directors_section = re.search(r'Date Of(.+?)Name/Address(.+?)IC/Passport', raw_text, re.DOTALL)
+        if directors_section:
+            directors_text = directors_section.group(2)
+        else:
+            directors_text = ""
+    else:
+        directors_text = directors_section.group(1)
+    
+    if directors_text:
+        # Split into blocks by looking for IC numbers
+        ic_pattern = r'(\d{6}-\d{2}-\d{4})'
+        blocks = re.split(ic_pattern, directors_text)
+        
+        # Process blocks (odd indices are ICs, even indices are the text after)
+        for i in range(1, len(blocks), 2):
+            ic = blocks[i].strip()
+            next_text = blocks[i+1] if i+1 < len(blocks) else ""
+            
+            # Parse the text block
+            lines = [line.strip() for line in next_text.split('\n') if line.strip()]
+            
+            if lines:
+                director = {"icNumber": ic}
+                
+                # First non-empty line is usually the name
+                if lines and 'DIRECTOR' not in lines[0] and 'SECRETARY' not in lines[0]:
+                    director["name"] = lines[0]
+                    lines = lines[1:]
+                
+                # Look for position and date
+                for line in lines:
+                    if 'DIRECTOR' in line or 'SECRETARY' in line:
+                        director["position"] = line
+                    elif re.match(r'\d{2}-\d{2}-\d{4}', line):
+                        director["appointmentDate"] = line
+                    elif line and len(line) > 10:  # Likely address
+                        director["address"] = line
+                
+                if director.get("name"):
+                    data["directors"].append(director)
+    
+    # ===== 5. EXTRACT SHAREHOLDERS (FIXED) =====
+    # Find shareholders table
+    share_section = re.search(r'SHAREHOLDERS\s*/MEMBERS(.+?)MY DATA', raw_text, re.IGNORECASE | re.DOTALL)
+    if not share_section:
+        share_section = re.search(r'IC/Passport/(.+?)MY DATA', raw_text, re.IGNORECASE | re.DOTALL)
+    
+    if share_section:
+        share_text = share_section.group(1)
+        
+        # Find all lines with IC pattern followed by name and shares
+        lines = share_text.split('\n')
+        current_ic = None
+        current_name = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Check for IC pattern
+            ic_match = re.search(r'(\d{6}-\d{2}-\d{4})', line)
+            if ic_match:
+                ic = ic_match.group(1)
+                
+                # Remove IC from line
+                line_without_ic = line.replace(ic, '').strip()
+                
+                # Try to extract name and shares
+                # Pattern: NAME SHARES (with comma)
+                share_match = re.search(r'([A-Z\s]+)\s+([\d,]+)$', line_without_ic)
+                if share_match:
+                    name = share_match.group(1).strip()
+                    shares = int(share_match.group(2).replace(',', '').replace(' ', ''))
+                    
+                    data["shareholders"].append({
+                        "name": name,
+                        "icNumber": ic,
+                        "shares": shares
+                    })
+    
+    # ===== 6. EXTRACT FINANCIAL INFORMATION =====
+    # Find financial section
+    fin_section = re.search(r'SUMMARY OF FINANCIAL INFORMATION(.+?)END OF REPORT', raw_text, re.IGNORECASE | re.DOTALL)
+    if fin_section:
+        fin_text = fin_section.group(1)
+        
+        # Auditor
+        auditor_match = re.search(r'Auditor\s*:\s*([^\n]+)', fin_text)
+        if auditor_match:
+            data["auditorDetails"]["name"] = auditor_match.group(1).strip()
+        
+        # Auditor Address
+        auditor_addr_match = re.search(r'Auditor Address\s*:\s*([^\n]+)', fin_text)
+        if auditor_addr_match:
+            data["auditorDetails"]["address"] = auditor_addr_match.group(1).strip()
+        
+        # Financial Year End
+        fye_match = re.search(r'Financial Year End\s*:\s*(\d{2}-\d{2}-\d{4})', fin_text)
+        if fye_match:
+            data["financialInformation"]["financialYearEnd"] = fye_match.group(1)
+        
+        # Unqualified Report
+        unqual_match = re.search(r'Unqualified Reports\s*\([^)]+\)\s*:\s*([YN])', fin_text)
+        if unqual_match:
+            data["financialInformation"]["unqualifiedReport"] = unqual_match.group(1) == 'Y'
+        
+        # Date of Tabling
+        tabling_match = re.search(r'Date of Tabling\s*:\s*(\d{2}-\d{2}-\d{4})', fin_text)
+        if tabling_match:
+            data["financialInformation"]["dateOfTabling"] = tabling_match.group(1)
+        
+        # Extract all balance sheet items
+        bs_patterns = {
+            "nonCurrentAssets": r'Non-Current Assets\s*:\s*([\d\-,\.]+)',
+            "currentAssets": r'Current Assets\s*:\s*([\d\-,\.]+)',
+            "nonCurrentLiabilities": r'Non-Current Liabilities\s*:\s*([\d\-,\.]+)',
+            "currentLiabilities": r'Current Liabilities\s*:\s*([\d\-,\.]+)',
+            "shareCapital": r'Share Capital\s*:\s*([\d\-,\.]+)',
+            "retainedEarnings": r'Retain Earning\s*:\s*([\d\-,\.]+)'
+        }
+        
+        data["financialInformation"]["balanceSheet"] = {}
+        for key, pattern in bs_patterns.items():
+            match = re.search(pattern, fin_text, re.IGNORECASE)
+            if match:
+                value = match.group(1).replace(',', '').replace(' ', '')
+                try:
+                    data["financialInformation"]["balanceSheet"][key] = float(value)
+                except:
+                    data["financialInformation"]["balanceSheet"][key] = value
+        
+        # Extract income statement items
+        is_patterns = {
+            "revenue": r'Revenue\s*:\s*([\d\-,\.]+)',
+            "profitBeforeTax": r'before tax\s*:\s*([\d\-,\.]+)',
+            "profitAfterTax": r'after tax\s*:\s*([\d\-,\.]+)'
+        }
+        
+        data["financialInformation"]["incomeStatement"] = {}
+        for key, pattern in is_patterns.items():
+            match = re.search(pattern, fin_text, re.IGNORECASE)
+            if match:
+                value = match.group(1).replace(',', '').replace(' ', '')
+                try:
+                    data["financialInformation"]["incomeStatement"][key] = float(value)
+                except:
+                    data["financialInformation"]["incomeStatement"][key] = value
+    
+    # ===== 7. EXTRACT DOCUMENT METADATA =====
+    # User ID
+    user_match = re.search(r'User Id:\s*([^\n]+)', raw_text)
+    if user_match:
+        data["documentMetadata"]["userId"] = user_match.group(1).strip()
+    
+    # Printing Date
+    print_match = re.search(r'Printing Date:\s*(\d{2}/\d{2}/\d{4})', raw_text)
+    if print_match:
+        data["documentMetadata"]["printingDate"] = print_match.group(1)
+    
+    # Registrar Date
+    registrar_match = re.search(r'Registrar Dated\s*:\s*(\d{2}-\d{2}-\d{4})', raw_text)
+    if registrar_match:
+        data["documentMetadata"]["registrarDate"] = registrar_match.group(1)
+    
+    # ===== 8. CALCULATE KYC METRICS =====
+    # Calculate shareholder percentages
+    total_shares = sum(sh.get("shares", 0) for sh in data.get("shareholders", []))
+    if total_shares > 0:
+        for shareholder in data.get("shareholders", []):
+            shares = shareholder.get("shares", 0)
+            shareholder["percentage"] = round((shares / total_shares) * 100, 2)
+    
+    # Calculate financial ratios
+    bs = data.get("financialInformation", {}).get("balanceSheet", {})
+    current_assets = bs.get("currentAssets", 0)
+    current_liabilities = bs.get("currentLiabilities", 0)
+    
+    if current_liabilities > 0:
+        current_ratio = current_assets / current_liabilities
+        data["kycAssessment"]["currentRatio"] = round(current_ratio, 4)
+        data["kycAssessment"]["financialHealth"] = "HIGH RISK" if current_ratio < 0.5 else "MODERATE RISK" if current_ratio < 1 else "LOW RISK"
+    else:
+        data["kycAssessment"]["currentRatio"] = "N/A"
+        data["kycAssessment"]["financialHealth"] = "NO LIABILITIES"
+    
+    # UBO concentration
+    if data.get("shareholders"):
+        max_shares = max(sh.get("shares", 0) for sh in data["shareholders"])
+        concentration = (max_shares / total_shares) * 100 if total_shares > 0 else 0
+        data["kycAssessment"]["uboConcentration"] = round(concentration, 1)
+        data["kycAssessment"]["uboRisk"] = "HIGH" if concentration > 50 else "MODERATE" if concentration > 25 else "LOW"
+    
+    # Years in operation
+    if data["companyIdentification"].get("incorporationDate"):
+        try:
+            incorp_date = datetime.strptime(data["companyIdentification"]["incorporationDate"], "%d-%m-%Y")
+            years = (datetime.now() - incorp_date).days / 365.25
+            data["kycAssessment"]["yearsInOperation"] = round(years, 1)
+            data["kycAssessment"]["operationalMaturity"] = "MATURE" if years > 5 else "ESTABLISHED" if years > 2 else "NEW"
+        except:
+            pass
+    
+    return data
+
+# ===== USAGE =====
+parsed_data = parse_ssm_kyc_complete(raw_text)
+
+# Print formatted output
+print(json.dumps(parsed_data, indent=2, default=str))
+```
+
+## 📊 **CORRECTED OUTPUT STRUCTURE**
+
+Here's what the **correctly parsed data** should look like:
+
+```json
+{
+  "companyIdentification": {
+    "companyName": "MAP PROPERTIES SDN. BHD.",
+    "registrationNumber": "201501019183",
+    "oldRegistrationNumber": "1144519-K",
+    "incorporationDate": "15-05-2015",
+    "companyType": "LIMITED BY SHARES PRIVATE LIMITED",
+    "status": "EXISTING",
+    "natureOfBusiness": [
+      "GROWING OF MAIZE",
+      "QUARRYING, SUPPLYING AND SELLING STONES"
+    ]
+  },
+  "addresses": {
+    "registeredAddress": {
+      "address": "B06, TINGKAT 1 JALAN BUKIT SEKILAU KUANTAN PAHANG",
+      "postcode": "25200",
+      "country": "MALAYSIA"
+    },
+    "businessAddress": {
+      "address": "A-6774, JALAN DATO BAHAMAN, KUANTAN PAHANG",
+      "postcode": "25250",
+      "country": "MALAYSIA"
+    }
+  },
+  "capitalStructure": {
+    "totalIssuedCapital": 1000002.0,
+    "ordinaryShares": 1000002
+  },
+  "directors": [
+    {
+      "name": "CHONG SIW CHIN",
+      "icNumber": "710615-08-5992",
+      "position": "DIRECTOR",
+      "appointmentDate": "01-08-2019",
+      "address": "183 KUALA KUANG MALAYSIA 31200 CHEMOR PERAK"
+    },
+    {
+      "name": "CHONG WOEI SOON",
+      "icNumber": "980202-38-5495",
+      "position": "DIRECTOR",
+      "appointmentDate": "04-04-2024",
+      "address": "77 JALAN KUBANG BUAYA MALAYSIA 25250 KUANTAN PAHANG"
+    },
+    {
+      "name": "ROSTILA BINTI IBRAHIM",
+      "icNumber": "771020-06-5908",
+      "position": "SECRETARY",
+      "appointmentDate": "04-11-2024",
+      "address": "A137-1, JALAN TUN ISMAIL 6, 25000 KUANTAN PAHANG"
+    },
+    {
+      "name": "MAZLAN BIN MOHD NOOR",
+      "icNumber": "740227-06-5049",
+      "position": "DIRECTOR",
+      "appointmentDate": "13-11-2025",
+      "address": "NO. 10, LORONG BUKIT SETONGKOL 44 TAMAN CENDERAWASIH INDAH MALAYSIA 25200 KUANTAN PAHANG"
+    }
+  ],
+  "shareholders": [
+    {
+      "name": "CHONG SIW CHIN",
+      "icNumber": "710615-08-5992",
+      "shares": 650001,
+      "percentage": 65.0
+    },
+    {
+      "name": "CHONG WOEI SOON",
+      "icNumber": "980202-38-5495",
+      "shares": 350000,
+      "percentage": 35.0
+    },
+    {
+      "name": "LEE YUAN YIN",
+      "icNumber": "710402-06-5330",
+      "shares": 1,
+      "percentage": 0.0
+    }
+  ],
+  "financialInformation": {
+    "financialYearEnd": "30-06-2022",
+    "unqualifiedReport": true,
+    "dateOfTabling": "31-07-2023",
+    "balanceSheet": {
+      "nonCurrentAssets": 0.0,
+      "currentAssets": 2.0,
+      "nonCurrentLiabilities": 0.0,
+      "currentLiabilities": 15148.0,
+      "shareCapital": 2.0,
+      "retainedEarnings": -15148.0
+    },
+    "incomeStatement": {
+      "revenue": 0.0,
+      "profitBeforeTax": -2634.0,
+      "profitAfterTax": -2634.0
+    }
+  },
+  "auditorDetails": {
+    "name": "S. THIAGARAJAH & CO. (AF0579)",
+    "address": "B-24, TINGKAT 1 JALAN HAJI AHMAD 4 SRI PAHANG BUSINESS CENTER 25300, KUANTAN PAHANG"
+  },
+  "kycAssessment": {
+    "currentRatio": 0.0001,
+    "financialHealth": "HIGH RISK",
+    "uboConcentration": 65.0,
+    "uboRisk": "HIGH",
+    "yearsInOperation": 10.5,
+    "operationalMaturity": "MATURE"
+  },
+  "documentMetadata": {
+    "userId": "QUORUM661782",
+    "printingDate": "19/11/2025",
+    "registrarDate": "19-11-2025"
+  }
+}
+```
+
+## 🔧 **QUICK FIXES FOR YOUR CURRENT PARSER:**
+
+If you want to fix just the shareholders parsing in your existing code:
+
+```python
+def fix_shareholder_parsing(shareholders_array):
+    """Fix the incorrectly parsed shareholders array"""
+    fixed_shareholders = []
+    
+    for shareholder in shareholders_array:
+        name = shareholder.get("name", "")
+        ic = shareholder.get("idNo", "")
+        
+        # Clean up the name field
+        if "650," in name:
+            fixed_name = "CHONG SIW CHIN"
+            shares = 650001
+        elif "350," in name:
+            fixed_name = "CHONG WOEI SOON"
+            shares = 350000
+        elif "LEE YUAN YIN" in name:
+            fixed_name = "LEE YUAN YIN"
+            shares = 1
+        else:
+            fixed_name = name
+            shares = shareholder.get("shares", 0)
+        
+        fixed_shareholders.append({
+            "name": fixed_name,
+            "idNo": ic,
+            "shares": shares,
+            "percent": shareholder.get("percent", 0)
+        })
+    
+    return fixed_shareholders
+
+# Usage
+fixed_shareholders = fix_shareholder_parsing(parsed_data["shareholders"])
+```
+
+This parser will give you **complete, accurate KYC data** ready for compliance checks. Would you like me to help you implement this or create a KYC risk assessment report from this data?

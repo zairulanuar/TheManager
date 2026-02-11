@@ -1,0 +1,111 @@
+import re
+from statistics import mean
+
+RE_NEW_SSM  = re.compile(r"\b(19|20)\d{2}\d{8}\b")
+RE_LLP_NEW  = re.compile(r"\b\d{14,15}\b")
+RE_OLD_ROC  = re.compile(r"\b\d{6,7}-[A-Z]\b")
+RE_OLD_ROB  = re.compile(r"\b[A-Z]{1,2}\d{6,7}-[A-Z]\b")
+RE_LLP_LEG  = re.compile(r"\b(?:LLP|llp)\s*\d{3,10}\s*-\s*[A-Z0-9](?:\s*[A-Z0-9]){1,4}\b")
+RE_DATE     = re.compile(r"\b(\d{1,2})([a-z]{0,2})?\s*(?:day\s+of\s+)?([A-Za-z\.]+)\s+(\d{4})\b", re.I)
+RE_DATE_NUMERIC = re.compile(r"\b(\d{1,2})[-/](\d{1,2})[-/](\d{4})\b")
+
+MONTHS = {
+ "JANUARY":"01","FEBRUARY":"02","MARCH":"03","APRIL":"04","MAY":"05","JUNE":"06",
+ "JULY":"07","AUGUST":"08","SEPTEMBER":"09","OCTOBER":"10","NOVEMBER":"11","DECEMBER":"12",
+ "JAN":"01","FEB":"02","MAC":"03","APR":"04","MEI":"05","JUN":"06","JUL":"07","OGOS":"08",
+ "SEPT":"09","OKTOBER":"10","NOV":"11","DIS":"12"
+}
+
+def normalize_text(t: str) -> str:
+    t = t.replace("’","'").replace("–","-").replace("—","-")
+    return "\n".join([ln.strip() for ln in t.splitlines() if ln.strip()])
+
+def parse_date(line: str):
+    m = RE_DATE.search(line)
+    if m:
+        d, suffix, mon, y = m.group(1), m.group(2), m.group(3), m.group(4)
+        mon_up = mon.strip(".").upper()
+        if mon_up in MONTHS:
+            return f"{y}-{MONTHS[mon_up]}-{int(d):02d}"
+    
+    # Fallback numeric
+    m2 = RE_DATE_NUMERIC.search(line)
+    if m2:
+        d, m, y = m2.group(1), m2.group(2), m2.group(3)
+        return f"{y}-{int(m):02d}-{int(d):02d}"
+
+    return None
+
+def pick_new_no(text: str):
+    for m in RE_NEW_SSM.finditer(text): return m.group(0)
+    
+    # Fallback for spaces/dots
+    matches = re.finditer(r"\b(19|20)[\d\s\.]{10,15}\b", text)
+    for m in matches:
+        clean = re.sub(r"[\s\.]", "", m.group(0))
+        if len(clean) == 12 and clean[:2] in ["19", "20"]:
+            return clean
+    return None
+
+def pick_llp_new_no(text: str):
+    # Try finding 14-15 digit numbers first
+    for m in RE_LLP_NEW.finditer(text):
+         return m.group(0)
+    # Fallback to standard 12 digit if not found
+    return pick_new_no(text)
+
+def pick_old_no(text: str):
+    for pat in (RE_OLD_ROC, RE_OLD_ROB, RE_LLP_LEG):
+        m = pat.search(text)
+        if m:
+            # Remove all whitespace from the match
+            return re.sub(r"\s+", "", m.group(0))
+    return None
+
+def avg_confidence(confs):
+    return mean(confs) if confs else 0.0
+
+def classify_doc(all_text: str) -> str:
+    # Normalize whitespace to single spaces to handle line breaks in phrases
+    t = re.sub(r'\s+', ' ', all_text).upper()
+    
+    # Relaxed matching for FORM_D
+    if "FORM D" in t or "FORMD" in t: 
+        return "FORM_D"
+        
+    # CORPORATE INFO
+    if "CORPORATE INFORMATION" in t or "COMPANY PROFILE" in t or "MAKLUMAT KORPORAT" in t:
+        return "CORPORATE_INFO"
+
+    # FORM 9 / Section 17
+    # Handles "CERTIFICATE OF INCORPORATION" (with/without spaces), "INCORPORATED UNDER...", "COMPANIES ACT 2016" etc.
+    # Also handles typos like "OFINCORPORATION" or "INCORPORATION OF PRIVATE COMPANY"
+    has_incorp_cert = (
+        "CERTIFICATE OF INCORPORATION" in t or 
+        "CERTIFICATE OFINCORPORATION" in t or 
+        "INCORPORATED UNDER THE COMPANIES ACT" in t or
+        "INCORPORATION OF PRIVATE COMPANY" in t
+    )
+    has_act_ref = (
+        "COMPANIES ACT" in t or 
+        "SECTION 17" in t or 
+        "ACT 2016" in t or 
+        "ACT 1965" in t or
+        "SURUHANJAYA" in t # Strong indicator of SSM document
+    )
+    
+    if has_incorp_cert and has_act_ref:
+        return "FORM_9"
+        
+    # Fallback for Form 9: "SDN BHD" + "MALAYSIA"
+    # Handles cases where headers are completely garbled but content is clear
+    if ("SDN. BHD." in t or "SDNBHD" in t or "BERHAD" in t) and "MALAYSIA" in t:
+         return "FORM_9"
+        
+    if "LIMITED LIABILITY PARTNERSHIPS ACT" in t and "CERTIFICATE OF REGISTRATION" in t:
+        return "LLP_CERT"
+        
+    if "CORPORATE INFORMATION" in t and ("COMPANIES COMMISSION OF MALAYSIA" in t or "SURUHANJAYA SYARIKAT MALAYSIA" in t):
+        return "CORPORATE_INFO"
+
+    return "UNKNOWN"

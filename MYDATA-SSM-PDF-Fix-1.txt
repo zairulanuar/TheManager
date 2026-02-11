@@ -1,0 +1,181 @@
+Dato’ CEO — got it. I reviewed your **Raw Text Extraction** + **Parsed Data Object** against the actual **SSM Corporate Profile** you uploaded. Below I’ve listed **what can (and should) be extracted for KYC/AML**, the **corrections** needed versus your parsed output, and a **clean, machine‑readable JSON** you can drop into your KYC engine. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## ✅ What can be extracted for KYC (with the correct values)
+
+**Core identifiers**
+
+*   **Entity name:** MAP PROPERTIES SDN. BHD. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Company No.:** 201501019183 (**1144519‑K**) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Jurisdiction:** Malaysia; **Legal form:** Private Limited (Limited by Shares); **Status:** Existing [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Incorporation date:** **2015‑05‑15** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Addresses**
+
+*   **Registered address:** *B06, Tingkat 1, Jalan Bukit Sekilau, 25200 Kuantan, Pahang, Malaysia* → *(your OCR shows “Postcode 225200”; correct is 25200)* [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Business address:** *A‑6774, Jalan Dato Bahaman, 25250 Kuantan, Pahang, Malaysia* → *(your OCR shows “225250”; correct is 25250)* [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Nature of business**
+
+*   1.  **Growing of Maize**; 2) **Quarrying, Supplying and Selling Stones** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Issued share capital**
+
+*   **RM 1,000,002.00** (Ordinary shares, cash; no preference/others) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Shareholders / UBOs (direct)**
+
+*   **CHONG SIW CHIN** — **650,001** shares (**65.0001%**) — NRIC **710615‑08‑5992** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **CHONG WOEI SOON** — **350,000** shares (**34.9999%**) — NRIC **980202‑38‑5495** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **LEE YUAN YIN** — **1** share (0.0001%) — NRIC **710402‑06‑5330** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+> **UBOs ≥25%:** CHONG SIW CHIN (65.0001%), CHONG WOEI SOON (34.9999%). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Directors / Secretary**
+
+*   **Directors:**
+    *   CHONG SIW CHIN — appointed **2019‑08‑01**, NRIC **710615‑08‑5992** (Chemor, Perak) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+    *   CHONG WOEI SOON — appointed **2024‑04‑04**, NRIC **980202‑38‑5495** (Kuantan, Pahang) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+    *   MAZLAN BIN MOHD NOOR — appointed **2025‑11‑13**, NRIC **740227‑06‑5049** (Kuantan, Pahang) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Company Secretary:** ROSTILA BINTI IBRAHIM — appointed **2024‑11‑04**, NRIC **771020‑06‑5908** (Kuantan, Pahang) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Charges / Securities**
+
+*   **None recorded** in this profile (shows “No information”). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Financial snapshot (latest available in profile)**
+
+*   **FYE:** 2022‑06‑30; **Date of tabling:** 2023‑07‑31; **Consolidated accounts:** No [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Revenue:** –2,634.00; **PBT/PAT:** –2,634.00; **Retained earnings:** –15,148.00; **Auditor:** S. THIAGARAJAH & CO. (AF0579) — *B‑24, Tingkat 1 Jalan Haji Ahmad 4, Sri Pahang Business Center, 25300 Kuantan, Pahang* [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Provenance (freshness)**
+
+*   **Info from docs registered as at 2025‑11‑18; Registrar dated 2025‑11‑19; printed 2025‑11‑19**. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## ❌ What’s wrong in your Parsed Data Object (and how to fix)
+
+1.  **`type`** → shows `"sLIMITED BY SHARES PRIVATE LIMITED"` (leading “s” & concatenation).  
+    **Fix:** Map to canonical form: `"Private Limited (Limited by Shares)"`. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+2.  **`registeredAddress`** → OCR mixed in “Postcode 225200” (extra 2).  
+    **Fix:** Normalize to **25200** and add structured fields (line1/city/state/postcode/country). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+3.  **`registrationDate`** → blank.  
+    **Fix:** Set to **2015‑05‑15**. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+4.  **`shareCapital`** → shows zeros.  
+    **Fix:** `issued_myr: 1000002.00` and class breakdown (Ordinary/Cash). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+5.  **`financials`** → some values truncated (e.g., **Current Liabilities** parsed as `148` not `15,148.00`).  
+    **Fix:** Parse numeric with thousands and negatives; capture **Retained Earnings –15,148.00** etc. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+6.  **`directors`** → empty; **`shareholders`** → names mis‑aligned (header text as a name, shares missing zeros).  
+    **Fix:** Zone‑based parsing for each section and header removal; validate that totals equal **1,000,002** shares. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+7.  **`issuePlace/issueDate/signingOfficer/qrPayload`** → not applicable to Corporate Profile (no signature block/QR payload on this PDF).  
+    **Fix:** Omit these for this document type to keep schema clean. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## 📦 Clean, KYC‑ready JSON (corrected)
+
+```json
+{
+  "docType": "SSM_CORPORATE_PROFILE",
+  "source": {
+    "document": "Corporate Profile",
+    "asAt": "2025-11-18",
+    "printedAt": "2025-11-19"
+  },
+  "entity": {
+    "name": "MAP PROPERTIES SDN. BHD.",
+    "companyNumber": "201501019183",
+    "oldNumber": "1144519-K",
+    "jurisdiction": "MY",
+    "legalForm": "Private Limited (Limited by Shares)",
+    "status": "Existing",
+    "incorporationDate": "2015-05-15"
+  },
+  "addresses": {
+    "registered": {
+      "line1": "B06, Tingkat 1, Jalan Bukit Sekilau",
+      "city": "Kuantan",
+      "state": "Pahang",
+      "postcode": "25200",
+      "country": "Malaysia"
+    },
+    "business": {
+      "line1": "A-6774, Jalan Dato Bahaman",
+      "city": "Kuantan",
+      "state": "Pahang",
+      "postcode": "25250",
+      "country": "Malaysia"
+    }
+  },
+  "activities": [
+    "Growing of Maize",
+    "Quarrying, Supplying and Selling Stones"
+  ],
+  "capital": {
+    "issuedShareCapitalMYR": 1000002.00,
+    "classes": [
+      {"class": "Ordinary", "paid": "Cash", "amountMYR": 1000002.00}
+    ]
+  },
+  "shareholders": [
+    {"name": "CHONG SIW CHIN", "idType": "NRIC", "idNo": "710615-08-5992", "shares": 650001, "percent": 65.0001},
+    {"name": "CHONG WOEI SOON", "idType": "NRIC", "idNo": "980202-38-5495", "shares": 350000, "percent": 34.9999},
+    {"name": "LEE YUAN YIN",  "idType": "NRIC", "idNo": "710402-06-5330", "shares": 1, "percent": 0.0001}
+  ],
+  "officers": {
+    "directors": [
+      {"name": "CHONG SIW CHIN", "idNo": "710615-08-5992", "appointed": "2019-08-01"},
+      {"name": "CHONG WOEI SOON", "idNo": "980202-38-5495", "appointed": "2024-04-04"},
+      {"name": "MAZLAN BIN MOHD NOOR", "idNo": "740227-06-5049", "appointed": "2025-11-13"}
+    ],
+    "secretaries": [
+      {"name": "ROSTILA BINTI IBRAHIM", "idNo": "771020-06-5908", "appointed": "2024-11-04"}
+    ]
+  },
+  "charges": [],
+  "financials": {
+    "fye": "2022-06-30",
+    "dateOfTabling": "2023-07-31",
+    "consolidated": false,
+    "revenue": -2634.00,
+    "profitBeforeTax": -2634.00,
+    "profitAfterTax": -2634.00,
+    "retainedEarnings": -15148.00,
+    "auditor": "S. THIAGARAJAH & CO. (AF0579)",
+    "auditorAddress": "B-24, Tingkat 1, Jalan Haji Ahmad 4, Sri Pahang Business Center, 25300 Kuantan, Pahang"
+  }
+}
+```
+
+> All values above are taken directly from your uploaded Corporate Profile. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## 🔎 KYC/AML actions you can run immediately
+
+1.  **Screening:** Sanctions, PEP, and adverse media on entity + **all** UBOs and directors/secretary (use names + NRIC to reduce false positives). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+2.  **Ownership rule:** Because two individuals hold **≥25%**, apply **UBO verification** and **EDD** if your policy requires. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+3.  **Address proof:** Obtain documentary proof for **registered** and **business** addresses (utility/bank statements) to support the values above. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+4.  **Authorisation:** Request **board resolution** / **letter of authority** naming authorised signatories for onboarding. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+5.  **Financial recency:** If your policy needs more recent numbers than **FYE 2022**, ask for latest audited or management accounts. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## 🛠️ Parser fixes (targeted)
+
+*   Use **zone headers** to ignore lines like “CORPORATE INFORMATION / SUMMARY OF …” when extracting rows. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   Normalise **postcodes** to 5 digits; reject anything not matching `^\d{5}$`. (Will auto‑catch “225200/225250”.) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   When parsing tables, **strip header fragments** (e.g., `ICc/Passport/ Total of`) before mapping to shareholders. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   Validate: `sum(shareholders.shares) == issuedShareCapital shares` (here **650,001 + 350,000 + 1 = 1,000,002**). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+If you want, I can **export** the above KYC dataset to **CSV/Excel** for screening or **push a JSON file** you can ingest into your system. Which format do you prefer, Dato’ CEO?

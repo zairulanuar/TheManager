@@ -1,0 +1,61 @@
+import re
+from statistics import mean
+
+RE_NEW_SSM  = re.compile(r"\b(19|20)\d{2}\d{8}\b")
+RE_LLP_NEW  = re.compile(r"\b\d{14,15}\b")
+RE_OLD_ROC  = re.compile(r"\b\d{6,7}-[A-Z]\b")
+RE_OLD_ROB  = re.compile(r"\b[A-Z]{1,2}\d{6,7}-[A-Z]\b")
+RE_LLP_LEG  = re.compile(r"\b(?:LLP|llp)\s*\d{3,10}\s*-\s*[A-Z0-9](?:\s*[A-Z0-9]){1,4}\b")
+RE_DATE     = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:day\s+of\s+)?([A-Za-z\.]+)\s+(\d{4})\b", re.I)
+
+MONTHS = {
+ "JANUARY":"01","FEBRUARY":"02","MARCH":"03","APRIL":"04","MAY":"05","JUNE":"06",
+ "JULY":"07","AUGUST":"08","SEPTEMBER":"09","OCTOBER":"10","NOVEMBER":"11","DECEMBER":"12",
+ "JAN":"01","FEB":"02","MAC":"03","APR":"04","MEI":"05","JUN":"06","JUL":"07","OGOS":"08",
+ "SEPT":"09","OKTOBER":"10","NOV":"11","DIS":"12"
+}
+
+def normalize_text(t: str) -> str:
+    t = t.replace("’","'").replace("–","-").replace("—","-")
+    return "\n".join([ln.strip() for ln in t.splitlines() if ln.strip()])
+
+def parse_date(line: str):
+    m = RE_DATE.search(line)
+    if not m: return None
+    d, mon, y = m.group(1), m.group(2), m.group(3)
+    mon_up = mon.strip(".").upper()
+    if mon_up in MONTHS:
+        return f"{y}-{MONTHS[mon_up]}-{int(d):02d}"
+    return None
+
+def pick_new_no(text: str):
+    for m in RE_NEW_SSM.finditer(text): return m.group(0)
+    return None
+
+def pick_llp_new_no(text: str):
+    # Try finding 14-15 digit numbers first
+    for m in RE_LLP_NEW.finditer(text):
+         return m.group(0)
+    # Fallback to standard 12 digit if not found
+    return pick_new_no(text)
+
+def pick_old_no(text: str):
+    for pat in (RE_OLD_ROC, RE_OLD_ROB, RE_LLP_LEG):
+        m = pat.search(text)
+        if m:
+            # Remove all whitespace from the match
+            return re.sub(r"\s+", "", m.group(0))
+    return None
+
+def avg_confidence(confs):
+    return mean(confs) if confs else 0.0
+
+def classify_doc(all_text: str) -> str:
+    t = all_text.upper()
+    if "FORM D" in t and "REGISTRATION OF BUSINESSES ACT" in t:
+        return "FORM_D"
+    if "CERTIFICATE OF INCORPORATION" in t and ("COMPANIES ACT 2016" in t or "COMPANIES ACT 1965" in t):
+        return "FORM_9"
+    if "LIMITED LIABILITY PARTNERSHIPS ACT" in t and "CERTIFICATE OF REGISTRATION" in t:
+        return "LLP_CERT"
+    return "UNKNOWN"

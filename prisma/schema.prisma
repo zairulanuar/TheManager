@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleType {
+  SUPER_ADMIN
+  OWNER
+  ADMIN
+  USER
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  type        RoleType @default(USER)
+  description String?
+  isSystem    Boolean  @default(false)
+  accountId   String?
+  account     Account? @relation(fields: [accountId], references: [id])
+  
+  users       User[]
+  permissions RolePermission[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Package {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  monthlyPrice Decimal
+  userLimit    Int      @default(5)
+  companyLimit Int      @default(1)
+  allowedModules String[]
+  accounts     Account[]
+}
+
+model Account {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  userLimit     Int            @default(5)
+  companyLimit  Int            @default(1)
+  packageId     String?
+  package       Package?       @relation(fields: [packageId], references: [id])
+  organizations Organization[]
+  users         User[]
+  themes        TenantTheme[]
+  roles         Role[]
+}
+
+model Organization {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  currency      String   @default("USD")
+  currencySymbol String  @default("$")
+  logo          String?
+  address       String?
+  phone         String?
+  email         String?
+  website       String?
+  contactPerson String?
+  
+  // Malaysian Business Details
+  businessRegNumber   String? // BRN
+  taxIdNumber         String? // TIN
+  sstRegNumber        String? // SST
+  tourismTaxRegNumber String?
+  msicCode            String?
+  businessDesc        String?
+  ssmCert             String?
+
+  // Extended SSM Fields
+  oldRegNumber        String?
+  companyType         String?
+  incorpDate          String?
+  validUntil          String?
+  registeredAddress   String?
+  branchAddresses     Json?
+  issuePlace          String?
+  issueDate           String?
+  
+  // Advanced SSM Fields
+  natureOfBusiness    String?
+  shareCapital        Json?
+  financials          Json?
+  directors           Json?
+  shareholders        Json?
+  charges             Json?
+  kycRiskAssessment   Json?
+
+  accountId     String
+  account       Account  @relation(fields: [accountId], references: [id])
+  moduleConfigs ModuleConfig[]
+  paymentGateways PaymentGateway[]
+  currencies    Currency[]
+  kycRecords    KycRecord[]
+}
+
+model KycRecord {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  type           String       @default("COMPANY") // COMPANY, INDIVIDUAL
+  status         String       @default("PENDING") // PENDING, VERIFIED, REJECTED, NEEDS_REVIEW
+  
+  // Document
+  documentUrl    String?      // URL to SSM Cert or similar
+  documentType   String?      // SSM_CERT, IC, PASSPORT
+  
+  // Extracted Data Snapshot
+  extractedData  Json?        // Full JSON blob from OCR
+  
+  // Verification Details
+  verifiedAt     DateTime?
+  verifiedBy     String?      // User ID of admin
+  
+  remarks        String?
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  auditLogs      KycAuditLog[]
+}
+
+model KycAuditLog {
+  id             String    @id @default(cuid())
+  kycRecordId    String
+  kycRecord      KycRecord @relation(fields: [kycRecordId], references: [id], onDelete: Cascade)
+  
+  action         String    // STATUS_CHANGE, NOTE_ADDED, DOCUMENT_UPLOADED
+  previousStatus String?
+  newStatus      String?
+  
+  details        String?   // User remarks or system notes
+  performedBy    String?   // User ID
+  
+  createdAt      DateTime  @default(now())
+}
+
+model Currency {
+  code          String  @id
+  name          String
+  symbol        String
+  organizations Organization[]
+}
+
+model User {
+  id             String           @id @default(cuid())
+  name           String?
+  email          String           @unique
+  password       String
+
+  image          String?          // Avatar URL
+  phone          String?
+  bio            String?
+  firstName      String?
+  lastName       String?
+  dateOfBirth    DateTime?
+  gender         String?
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  postalCode     String?
+  website        String?
+  isActive       Boolean          @default(true)
+  
+  socialLinks    Json?
+  preferences    Json?
+  privacySettings Json?
+  
+  // Role System Upgrade
+  roleType       RoleType         @default(USER) @map("role") // Kept for migration
+  roleId         String?
+  role           Role?            @relation(fields: [roleId], references: [id])
+  
+  accountId      String?
+  account        Account?         @relation(fields: [accountId], references: [id])
+
+  permissions    UserPermission[]
+}
+
+model ModuleConfig {
+  id             String       @id @default(cuid())
+  moduleKey      String       
+  isEnabled      Boolean      @default(false)
+  metadata       Json?        
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, moduleKey])
+}
+
+model UserPermission {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  moduleKey String
+  canView   Boolean @default(true)
+  canEdit   Boolean @default(false)
+
+  @@unique([userId, moduleKey])
+}
+
+model RolePermission {
+  id        String  @id @default(cuid())
+  roleId    String
+  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  moduleKey String
+  canView   Boolean @default(true)
+  canEdit   Boolean @default(false)
+
+  @@unique([roleId, moduleKey])
+}
+
+model PaymentGateway {
+  id             String        @id @default(cuid())
+  name           String
+  isEnabled      Boolean       @default(false)
+  config         Json?         // Store API keys, secrets, etc. securely
+  isDefault      Boolean       @default(false)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([organizationId, name])
+}
+
+model TenantTheme {
+  id          String   @id @default(cuid())
+  name        String
+  colors      Json?    // Store color palette
+  radius      Float    @default(0.5)
+  font        String   @default("Inter")
+  isPublished Boolean  @default(false)
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SystemSetting {
+  key         String   @id
+  value       String   // Use String for simplicity, can store JSON if needed
+  group       String   @default("GENERAL") // AI, BRANDING, EMAIL, etc.
+  description String?
+  isSecret    Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}

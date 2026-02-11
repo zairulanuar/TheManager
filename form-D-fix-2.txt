@@ -1,0 +1,198 @@
+Dato’ CEO, your updated OCR results **look significantly better**, but there are still **four remaining issues** in the parsed output that you can fix by improving your **detection rules**, not Tesseract itself.
+
+Below is a **precise verification** of what improved, what is still wrong, and exactly *what to update* in your detection logic.
+
+***
+
+# ✅ What Improved After Applying My Suggestions
+
+Excellent improvements from your preprocessing + PSM tuning:
+
+### ✔️ 1. Branch address is now **correct**
+
+OCR now reads:
+
+    15 & 17, JALAN CYBER 16, SENAI COMMERCIAL PARK, SENAI, 81400 SENAI JOHOR
+
+This is **identical** to the certificate.  
+Previously: missing “17”, missing “JALAN”, misspelled “SSENAI”.
+
+### ✔️ 2. Principal address is now very close
+
+Only a small comma formatting issue remains:
+
+    TMN.UNGKU TUN, AMINAH
+
+should be:
+
+    TMN. UNGKU TUN AMINAH
+
+### ✔️ 3. Issue date now correctly detected as **2017‑03‑02**
+
+Earlier you had `2017-03-22`.  
+Now it matches the certificate.
+
+### ✔️ 4. Confidence improved (\~0.9029)
+
+Great improvement—this shows your preprocessing & pattern files are helping.
+
+***
+
+# ❌ What Still Needs Correction
+
+Your OCR text is already good — the remaining errors are from your **parsing/detection logic**, not Tesseract.
+
+Here are the issues:
+
+***
+
+## ❌ 1. `documentTitle` is still empty
+
+Your detector is failing to extract:
+
+    CERTIFICATE OF REGISTRATION
+    THE REGISTRATION OF BUSINESSES ACT 1956 (ACT 197)
+
+### **Fix**
+
+Add a rule:
+
+    Detect lines between FORM D and "This is to certify"
+    Combine into documentTitle
+
+***
+
+## ❌ 2. `legalBasis` is still empty
+
+Your OCR contains the legal basis:
+
+    THE REGISTRATION OF BUSINESSES ACT 1956 (ACT 197)
+
+### **Fix**
+
+Regex example:
+
+```regex
+REGISTRATION OF BUSINESSES ACT\s+1956\s*\(ACT\s*197\)
+```
+
+Store as:
+
+```json
+"legalBasis": {
+  "actName": "Registration of Businesses Act 1956",
+  "actNumber": "Act 197"
+}
+```
+
+***
+
+## ❌ 3. `registeredAddress` minor formatting error
+
+Parsed:
+
+    TMN.UNGKU TUN, AMINAH
+
+Correct:
+
+    TMN. UNGKU TUN AMINAH
+
+### **Fix**
+
+Apply a post‑processing rule:
+
+```python
+s = s.replace("TMN.UNGKU TUN, AMINAH", "TMN. UNGKU TUN AMINAH")
+```
+
+Or use an address dictionary:
+
+*   TMN.
+*   UNGKU TUN AMINAH
+
+***
+
+## ❌ 4. `signingOfficer` incorrectly includes noise text
+
+Parsed:
+
+    omen | RI DATUK NOR AZIMAH ABDUL AZIZ
+
+OCR text contains noise near the signature.
+
+### **Fix using regex**
+
+Extract only the name portion:
+
+```regex
+([A-Z][A-Z ]+NOR AZIMAH ABDUL AZIZ)
+```
+
+Or simpler:
+
+```python
+clean = re.search(r"(DATUK NOR AZIMAH ABDUL AZIZ)", ocr_text)
+```
+
+Set:
+
+    "signingOfficer": "DATUK NOR AZIMAH ABDUL AZIZ"
+
+***
+
+## ❌ 5. `qrPayload` still empty
+
+Your pipeline **did not decode the QR code**.
+
+### **Fix**
+
+Use `pyzbar`:
+
+```python
+from pyzbar.pyzbar import decode
+qr = decode(image)
+if qr:
+    payload = qr[0].data.decode("utf-8")
+```
+
+Then store it in:
+
+```json
+"qrPayload": "<value>"
+```
+
+***
+
+# 📌 Summary of What You Should Update in Your Detection Logic
+
+Here is the exact checklist:
+
+### **A) Add “Document Title” extraction rule**
+
+*   Capture lines between `FORM D` and the sentence starting with `This is to certify`.
+
+### **B) Add “Legal Basis” regex**
+
+    REGISTRATION OF BUSINESSES ACT 1956 (ACT 197)
+
+### **C) Add address normalizer**
+
+Fix:
+
+*   `TMN.UNGKU TUN, AMINAH` → `TMN. UNGKU TUN AMINAH`
+
+### **D) Add Signing Officer name cleaner**
+
+Strip noise:
+
+*   Remove any characters before “DATUK”
+*   Ensure final field is exactly:
+
+<!---->
+
+    DATUK NOR AZIMAH ABDUL AZIZ
+
+### **E) Add QR decoder (pyzbar)**
+
+***
+

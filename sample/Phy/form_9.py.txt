@@ -1,0 +1,103 @@
+from .rules_base import pick_new_no, pick_old_no, parse_date, normalize_text
+
+def extract_form_9(lines: list) -> dict:
+    blocks = [ln for ln in lines if ln.strip()]
+    text = normalize_text("\n".join(blocks))
+    fields = {
+        "doc_type": "FORM_9",
+        "entity_name": None,
+        "business_type": "Sdn. Bhd. (Private Limited)",
+        "registration_number_new": pick_new_no(text),
+        "registration_number_old": pick_old_no(text),
+        "incorporation_or_registration_date": None,
+        "valid_until": None,
+        "registered_address": None,
+        "branch_addresses": [],
+        "issue_place": None,
+        "issue_date": None,
+        "signing_officer": None
+    }
+
+    # Company name appears prominently after "This is to certify that"
+    for i, ln in enumerate(blocks):
+        if "certify that" in ln.lower():
+            # Check if name is on the same line
+            parts = ln.split("certify that", 1) # case-insensitive split approx
+            if len(parts) == 1: # try matching case-insensitive
+                lower_ln = ln.lower()
+                idx = lower_ln.find("certify that")
+                if idx != -1:
+                    candidate = ln[idx + len("certify that"):].strip()
+                else:
+                    candidate = ""
+            else:
+                 candidate = parts[1].strip()
+
+            # If candidate is empty or just punctuation, look at next line
+            if not candidate or len(candidate) < 3:
+                j = i+1
+                while j < len(blocks) and not blocks[j].strip():
+                    j += 1
+                if j < len(blocks): candidate = blocks[j].strip()
+            
+            if candidate:
+                # Cleanup: remove registration numbers if they were captured in the name line
+                if fields["registration_number_new"]:
+                    candidate = candidate.replace(fields["registration_number_new"], "")
+                if fields["registration_number_old"]:
+                    candidate = candidate.replace(fields["registration_number_old"], "")
+                
+                # Remove parens wrapping the old number if they were left behind "()" or "(-)"
+                candidate = candidate.replace("()", "").replace("(-)", "")
+                
+                fields["entity_name"] = candidate.strip(" ,.-")
+            break
+    if not fields["entity_name"]:
+        caps = [ln for ln in blocks if ln.strip().isupper() and len(ln.strip()) > 5]
+        fields["entity_name"] = sorted(caps, key=len, reverse=True)[0] if caps else None
+
+    for i, ln in enumerate(blocks):
+        low = ln.lower()
+        if "on and from the" in low or "incorporated under" in low:
+            fields["incorporation_or_registration_date"] = parse_date(ln)
+        if low.startswith("dated at"):
+            fields["issue_date"] = parse_date(ln)
+            parts = ln.split(" ", 3)
+            if len(parts) >= 3: fields["issue_place"] = parts[2].strip(",.")
+        
+        # Address extraction
+        if "registered office at" in low:
+            addr_parts = []
+            if " at" in ln:
+                remainder = ln.split(" at", 1)[-1].strip(" :-")
+                if remainder: addr_parts.append(remainder)
+            
+            # Capture subsequent lines
+            j = i + 1
+            while j < len(blocks):
+                next_ln = blocks[j].strip()
+                next_low = next_ln.lower()
+                
+                if "dated at" in next_low: break
+                if "registrar of companies" in next_low: break
+                if "scan to verify" in next_low: break
+                
+                addr_parts.append(next_ln)
+                j += 1
+            
+            if addr_parts:
+                fields["registered_address"] = ", ".join(addr_parts)
+
+        if "registrar of companies" in low:
+            # Try to get the name from the line above
+            if i > 0:
+                prev = blocks[i-1].strip()
+                # Ensure prev line isn't a date line or empty
+                if len(prev) > 3 and "dated at" not in prev.lower() and not parse_date(prev):
+                     fields["signing_officer"] = prev
+            
+            # Fallback to current line if nothing found above
+            if not fields["signing_officer"]:
+                fields["signing_officer"] = ln.strip()
+
+    return fields

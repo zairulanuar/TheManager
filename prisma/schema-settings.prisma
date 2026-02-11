@@ -1,0 +1,9 @@
+
+model SystemSetting {
+  key         String   @id
+  value       String   @db.Text
+  group       String   @default("GENERAL") // AI, BRANDING, EMAIL, etc.
+  description String?
+  isSecret    Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}

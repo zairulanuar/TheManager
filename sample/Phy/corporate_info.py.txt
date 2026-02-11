@@ -1,0 +1,748 @@
+from __future__ import annotations
+import re
+from datetime import datetime
+from .rules_base import parse_date, normalize_text
+
+def extract_corporate_info(lines: list[str]) -> dict:
+    """
+    Extracts data from SSM Corporate Information (Company Profile).
+    """
+    # Filter empty lines
+    blocks = [ln.strip() for ln in lines if ln.strip()]
+    raw_text = "\n".join(blocks)
+    
+    # Initialize fields with the requested structure
+    fields = {
+        "docType": "SSM_CORPORATE_PROFILE",
+        "source": {
+            "document": "Corporate Profile",
+            "asAt": None,
+            "printedAt": None
+        },
+        "entity": {
+            "name": None,
+            "companyNumber": None,
+            "oldNumber": None,
+            "jurisdiction": "MY",
+            "legalForm": None,
+            "status": None,
+            "incorporationDate": None
+        },
+        "addresses": {
+            "registered": {},
+            "business": {}
+        },
+        "natureOfBusiness": [],
+        "capital": {
+            "issuedShareCapitalMYR": 0.0,
+            "classes": []
+        },
+        "shareholders": [],
+        "officers": {
+            "directors": [],
+            "secretaries": []
+        },
+        "charges": [],
+        "financials": {
+            "yearEnd": None,
+            "auditorName": None,
+            "auditorAddress": None,
+            "unqualifiedReport": True,
+            "consolidatedAccounts": False,
+            "dateOfTabling": None,
+            "balanceSheet": {},
+            "incomeStatement": {}
+        },
+        "kycRiskAssessment": {
+            "currentRatio": None,
+            "financialHealth": "UNKNOWN"
+        }
+    }
+    
+    # --- Helpers ---
+    
+    def clean_currency(val_str):
+        """Cleans currency string to float."""
+        if not val_str: return 0.0
+        # Handle (123) as negative
+        is_negative = "(" in val_str or val_str.startswith("-")
+        clean = re.sub(r"[^\d\.]", "", val_str)
+        try:
+            val = float(clean)
+            return -val if is_negative else val
+        except:
+            return 0.0
+
+    def parse_address(addr_str):
+        if not addr_str: return {}
+        
+        # Heuristic fix for "Postcode 225200" -> "25200"
+        # If we see 6 digits starting with 225, it's likely a typo for 25...
+        # But safer to just look for the last valid 5-digit sequence
+        
+        postcode = ""
+        city = ""
+        state = ""
+        country = "Malaysia"
+        
+        # 1. Try to find explicit 5-digit postcode
+        # Regex to find 5 digits that are NOT part of a larger number (like ID)
+        # We look from the end of string
+        m_pc = re.findall(r"\b(\d{5})\b", addr_str)
+        if m_pc:
+            postcode = m_pc[-1] # Take the last one found
+        else:
+            # Fallback: check for 6 digits that might be typo (e.g. 225200)
+            m_typo = re.search(r"\b(2)(\1\d{4})\b", addr_str)
+            if m_typo:
+                postcode = m_typo.group(2) # 25200
+        
+        # Cleanup Address String
+        # Remove "Postcode" label if present
+        clean_addr = re.sub(r"Postcode\s*:?", "", addr_str, flags=re.IGNORECASE)
+        # Remove artifacts like ", 2," or ", 1," that often appear before postcode in OCR
+        clean_addr = re.sub(r",\s*\d+\s*,", ", ", clean_addr)
+        
+        # Extract City/State if postcode found
+        if postcode:
+            # Usually format is: ... Postcode City State ...
+            parts = clean_addr.split(postcode)
+            if len(parts) > 1:
+                tail = parts[1].strip(" ,")
+                # Remove "Malaysia"
+                tail = re.sub(r"\bMalaysia\b", "", tail, flags=re.IGNORECASE).strip(" ,")
+                
+                tail_words = tail.split()
+                if tail_words:
+                    state = tail_words[-1]
+                    if len(tail_words) > 1:
+                        city = " ".join(tail_words[:-1])
+                    else:
+                        city = state # Fallback
+                        
+                line1 = parts[0].strip(" ,")
+            else:
+                line1 = clean_addr
+        else:
+            line1 = clean_addr
+            
+        return {
+            "line1": line1.upper(),
+            "city": city.upper(),
+            "state": state.upper(),
+            "postcode": postcode,
+            "country": country.upper()
+        }
+
+    def get_value(key_patterns, stop_patterns, start_idx=0, search_limit=30):
+        found_idx = -1
+        for i in range(start_idx, min(len(blocks), start_idx + search_limit)):
+            for kp in key_patterns:
+                if re.search(kp, blocks[i], re.IGNORECASE):
+                    found_idx = i
+                    break
+            if found_idx != -1:
+                break
+        
+        if found_idx == -1:
+            return None, start_idx
+            
+        line = blocks[found_idx]
+        match = None
+        for kp in key_patterns:
+             match = re.search(kp, line, re.IGNORECASE)
+             if match: break
+        
+        if not match: return None, start_idx
+
+        remainder = line[match.end():].strip(" :")
+        extracted_lines = []
+        if remainder and remainder.lower() != "nil":
+            extracted_lines.append(remainder)
+            
+        current_idx = found_idx + 1
+        while current_idx < len(blocks):
+            ln = blocks[current_idx]
+            
+            # Stop checks
+            is_stop = False
+            for sp in stop_patterns:
+                if re.search(sp, ln, re.IGNORECASE):
+                    is_stop = True
+                    break
+            if is_stop: break
+            
+            # Footer checks
+            if "Printing Date" in ln or "Suruhanjaya Syarikat" in ln or "Page" in ln:
+                current_idx += 1 
+                continue
+                
+            # Skip noise lines
+            if "CORPORATE INFORMATION" in ln.upper() or "SUMMARY OF" in ln.upper():
+                current_idx += 1
+                continue
+            
+            if ln.strip():
+                extracted_lines.append(ln)
+            current_idx += 1
+            
+        return " ".join(extracted_lines).strip(), current_idx
+
+    # --- MAIN EXTRACTION ---
+    
+    # 1. Provenance (Dates)
+    for ln in blocks:
+        if "Printing Date" in ln or "Printed Date" in ln:
+            m = re.search(r"(\d{1,2}-\d{1,2}-\d{4})", ln)
+            if m: fields["source"]["printedAt"] = parse_date(m.group(1))
+    
+    # 2. Company Info
+    val, idx = get_value([r"^Name\b", r"^Company Name\b"], [r"^Last Old Name", r"^Registration No"], 0)
+    if val: fields["entity"]["name"] = val.lstrip(": ")
+    
+    val, idx = get_value([r"^Registration No"], [r"^Incorporation Date", r"^Registration Date", r"^Type"], 0)
+    if val:
+        # Extract New Format (12 digits)
+        m_new = re.search(r"\b(19|20)\d{10}\b", val)
+        if m_new: fields["entity"]["companyNumber"] = m_new.group(0)
+        
+        # Extract Old Format
+        m_old = re.search(r"\b\d{5,7}-[A-Za-z]\b", val)
+        if m_old: fields["entity"]["oldNumber"] = m_old.group(0).upper()
+        
+        if not fields["entity"]["companyNumber"] and fields["entity"]["oldNumber"]:
+             fields["entity"]["companyNumber"] = fields["entity"]["oldNumber"]
+
+    val, idx = get_value([r"^Incorporation Date", r"^Registration Date"], [r"^Type", r"^Status"], 0)
+    if val:
+         # Try YYYY-MM-DD or DD-MM-YYYY
+         fields["entity"]["incorporationDate"] = parse_date(val)
+
+    val, idx = get_value([r"^Type"], [r"^Status"], 0)
+    if val:
+        val_clean = val.lstrip(": ").upper()
+        # Fix: Map to canonical form
+        if "PRIVATE" in val_clean and "LIMITED" in val_clean:
+            fields["entity"]["legalForm"] = "Private Limited (Limited by Shares)"
+        elif "PUBLIC" in val_clean:
+            fields["entity"]["legalForm"] = "Public Limited"
+        else:
+            fields["entity"]["legalForm"] = val_clean
+
+    val, idx = get_value([r"^Status"], [r"^Registered Address", r"^Origin"], 0)
+    if val: fields["entity"]["status"] = val
+
+    # 3. Addresses
+    val, idx = get_value([r"^Registered Address"], [r"^Origin", r"^Business Address"], 0)
+    if val:
+         fields["addresses"]["registered"] = parse_address(val)
+
+    val, idx = get_value([r"^Business Address"], [r"^Nature Of Business"], 0)
+    if val:
+         fields["addresses"]["business"] = parse_address(val)
+
+    # 4. Nature of Business - IMPROVED REGEX
+    nob_match = re.search(r'Nature Of Business\s*:\s*(.+?)(?=MY DATA|User Id:|$|SUMMARY OF SHARE CAPITAL|DIRECTORS)', raw_text, re.IGNORECASE | re.DOTALL)
+    if nob_match:
+        nob_text = nob_match.group(1).strip()
+        # Split by numbers or bullet points
+        parts = re.split(r"(?:^|\s)\d+\.\s+", nob_text)
+        fields["natureOfBusiness"] = [p.strip() for p in parts if p.strip()]
+    else:
+        # Fallback to old method
+        val, idx = get_value([r"^Nature Of Business"], [r"^SUMMARY OF SHARE CAPITAL", r"^DIRECTORS", r"^SHAREHOLDERS"], 0)
+        if val:
+            parts = re.split(r"(?:^|\s)\d+\.\s+", val)
+            fields["natureOfBusiness"] = [p.strip() for p in parts if p.strip()]
+
+    # 5. Share Capital
+    sc_start = -1
+    for i, ln in enumerate(blocks):
+        if "SUMMARY OF SHARE CAPITAL" in ln.upper():
+            sc_start = i
+            break
+            
+    if sc_start != -1:
+        # Look for table rows: Currency | Total | Cash | Otherwise | Non-Cash
+        # Regex for "Ordinary" row
+        for i in range(sc_start, min(len(blocks), sc_start + 25)):
+            ln = blocks[i]
+            if "Ordinary" in ln or "Preference" in ln:
+                # Handle RM prefix and potential spaces
+                # e.g. "Ordinary RM 1,000,002.00"
+                
+                # First, try to find the total amount (usually the first large number)
+                # We look for numbers with at least 2 decimal places
+                nums = re.findall(r"[\d,]+\.\d{2}", ln)
+                
+                # Filter out small numbers that might be counts (if any) or look for max?
+                # Usually: Total, Cash, Non-Cash
+                # If we have multiple numbers, the first one is usually the Total Amount.
+                
+                if nums:
+                    # Clean numbers
+                    valid_amounts = []
+                    for n in nums:
+                        try:
+                            val = float(n.replace(",", ""))
+                            valid_amounts.append(val)
+                        except: pass
+                    
+                    if valid_amounts:
+                        # Assumption: First valid amount is the Total Issued
+                        amount = valid_amounts[0]
+                        
+                        payment_type = "Cash"
+                        if "NON-CASH" in ln.upper() or "OTHERWISE" in ln.upper():
+                            payment_type = "Non-Cash"
+
+                        # Only add if > 0 (avoid adding 0.00 lines if possible, unless it's the only one)
+                        if amount > 0 or len(valid_amounts) == 1:
+                            fields["capital"]["issuedShareCapitalMYR"] += amount
+                            
+                            fields["capital"]["classes"].append({
+                                "class": "Ordinary" if "Ordinary" in ln else "Preference",
+                                "paid": payment_type,
+                                "amountMYR": amount
+                            })
+
+    # 6. Directors & Secretaries - IMPROVED BLOCK APPROACH
+    # Find the directors section using regex to capture the whole block
+    directors_section = re.search(r'(?:DIRECTORS / OFFICERS)(.+?)(?:REGISTRAR OF COMPANIES|SHAREHOLDERS)', raw_text, re.DOTALL | re.IGNORECASE)
+    
+    if directors_section:
+        directors_text = directors_section.group(1)
+        # Split into blocks by looking for IC numbers
+        # Pattern: digits-digits-digits
+        ic_pattern = r'(\d{6}-\d{2}-\d{4})'
+        blocks_dir = re.split(ic_pattern, directors_text)
+        
+        # Process blocks (odd indices are ICs, even indices are the text after)
+        # The text usually starts with Name (before the first IC match if any) but re.split behavior:
+        # If string starts with match, first element is empty string.
+        # If we split "Name1 IC1 Addr1 Name2 IC2 Addr2", we get: ["Name1 ", "IC1", " Addr1 Name2 ", "IC2", " Addr2"]
+        
+        # We need to handle the first name which appears before the first IC
+        first_chunk = blocks_dir[0].strip()
+        # Clean up headers from first chunk
+        first_chunk = re.sub(r"(Name|Address|IC No|Passport|Designation|Date of Appointment|No\.|ID Type)", "", first_chunk, flags=re.IGNORECASE).strip()
+        
+        # Initialize loop
+        # We'll pair (Name, IC, Rest)
+        # Current logic in Fix-5 assumes: blocks[i] is IC, blocks[i+1] is Rest containing Address, Date, Next Name
+        
+        # Let's iterate through ICs
+        for i in range(1, len(blocks_dir), 2):
+            ic = blocks_dir[i].strip()
+            next_text = blocks_dir[i+1] if i+1 < len(blocks_dir) else ""
+            
+            # The name for this IC is usually at the end of the PREVIOUS block
+            prev_text = blocks_dir[i-1].strip()
+            
+            # Extract Name from end of prev_text
+            # It might be multiline address of previous person, then Name.
+            # Strategy: Split prev_text by lines, take the last non-empty line as Name?
+            # Or rely on the fact that headers are gone.
+            
+            # If i=1, prev_text is the first chunk (Name 1)
+            # If i=3, prev_text is "Addr1 Name2"
+            
+            prev_lines = [l.strip() for l in prev_text.split('\n') if l.strip()]
+            name = ""
+            if prev_lines:
+                # Filter out obvious address lines or dates from the end to find the name
+                # But typically Name is just the last line or lines before IC
+                # Simple heuristic: Last line is name
+                name = prev_lines[-1]
+                # Clean up name if it contains "Director" or "Secretary" (rare but possible)
+                name = name.replace("DIRECTOR", "").replace("SECRETARY", "").strip()
+            
+            # Now parse the "Rest" (next_text) for Position, Date, Address
+            # It stops where the next name begins (which we handle in next iteration)
+            # But wait, next iteration takes name from end of this block.
+            # So we need to separate Address from Next Name in `next_text`.
+            
+            # Heuristic: Address lines vs Name lines.
+            # Address usually contains numbers, "Jalan", "Taman", State names.
+            # Name is usually uppercase text.
+            
+            lines = [l.strip() for l in next_text.split('\n') if l.strip()]
+            
+            person = {
+                "name": name,
+                "idType": "NRIC",
+                "idNo": ic,
+                "position": "DIRECTOR", # Default
+                "appointmentDate": None,
+                "address": []
+            }
+            
+            for line in lines:
+                if "SECRETARY" in line.upper():
+                    person["position"] = "SECRETARY"
+                elif "DIRECTOR" in line.upper():
+                    person["position"] = "DIRECTOR"
+                elif re.search(r'\d{1,2}-\d{1,2}-\d{4}', line):
+                    # Date found
+                    m_date = re.search(r"(\d{1,2}-\d{1,2}-\d{4})", line)
+                    if m_date:
+                        person["appointmentDate"] = parse_date(m_date.group(1))
+                        # Remove date, rest might be address
+                        clean_line = line.replace(m_date.group(1), "").strip()
+                        if len(clean_line) > 5: # If meaningful text remains
+                             person["address"].append(clean_line)
+                else:
+                    # Likely address part
+                    # Check if it looks like a name for the next person?
+                    # If it's the last line and looks like a name (no numbers, short), maybe it's next name.
+                    # But we handle name in next iteration. 
+                    # We just treat everything else as address here, 
+                    # and rely on the next iteration grabbing the last line as name.
+                    # Problem: If we consume the name as address here, next iteration gets nothing.
+                    
+                    # Refined Strategy:
+                    # Don't add the LAST line to address if there are multiple lines, 
+                    # assuming it's the name of the next person.
+                    # Unless this is the LAST block.
+                    pass 
+            
+            # Re-evaluating extraction strategy based on Fix-5 logic which seemed simpler
+            # Fix-5 Logic:
+            # "lines = [line.strip() for line in next_text.split('\n') if line.strip()]"
+            # "First non-empty line is usually the name" -> This assumes IC comes FIRST then Name?
+            # Fix-5 says: "Process blocks (odd indices are ICs, even indices are the text after)"
+            # And: "First non-empty line is usually the name"
+            # This implies the layout: IC Name Address...
+            # But SSM PDF is usually: Name IC Address... OR Name Address IC...
+            # Let's look at Fix-5 code again:
+            # blocks = re.split(ic_pattern, directors_text)
+            # for i in range(1, len(blocks), 2):
+            #    ic = blocks[i]
+            #    next_text = blocks[i+1]
+            #    lines = ...
+            #    if lines: director["name"] = lines[0] ...
+            
+            # This logic in Fix-5 assumes the Name follows the IC. 
+            # If the PDF is "Name IC Address", then `blocks[i-1]` has the name.
+            # If the PDF is "IC Name Address", then `blocks[i+1]` starts with Name.
+            
+            # My existing code handles "Name IC" logic well (splitting by ID).
+            # The issue with existing code was likely multi-line addresses.
+            
+            # Hybrid approach:
+            # 1. Try to find Name in `prev_lines` (Last line)
+            # 2. If not found or empty, look in `lines` (First line)
+            
+            # Address Collection:
+            # Collect all lines in `lines` (next_text) EXCEPT:
+            # - Position keywords
+            # - Dates
+            # - The line used as Next Name (if any)
+            
+            address_lines = []
+            
+            # Identify Position and Date first
+            for line in lines:
+                if "SECRETARY" in line.upper():
+                    person["position"] = "SECRETARY"
+                    continue
+                if "DIRECTOR" in line.upper():
+                    person["position"] = "DIRECTOR"
+                    continue
+                
+                m_date = re.search(r"(\d{1,2}-\d{1,2}-\d{4})", line)
+                if m_date:
+                    person["appointmentDate"] = parse_date(m_date.group(1))
+                    # If line has more content, keep it
+                    clean_line = line.replace(m_date.group(1), "").strip()
+                    if len(clean_line) > 5:
+                         address_lines.append(clean_line)
+                    continue
+                
+                # Otherwise it's address or next name
+                address_lines.append(line)
+            
+            # If not the last block, the last line of address_lines might be the next person's name
+            if i < len(blocks_dir) - 2:
+                if address_lines:
+                    # Remove last line, it belongs to next person
+                    address_lines.pop()
+            
+            # Join address
+            if address_lines:
+                person["address"] = ", ".join(address_lines).strip(", ")
+            
+            # If Name wasn't found in prev_lines (e.g. first person), check if it was caught?
+            # If i=1, prev_text is processed above.
+            
+            if "Secretary" in person["position"].title():
+                fields["officers"]["secretaries"].append(person)
+            else:
+                fields["officers"]["directors"].append(person)
+
+    # 7. Shareholders - IMPROVED REGEX APPROACH (Fix-5)
+    shareholders_match = re.search(r'(?:SHAREHOLDERS|MEMBERS).+?share(.+?)(?=MY DATA|User Id:|$|COMPANY CHARGES|SUMMARY OF FINANCIAL)', raw_text, re.IGNORECASE | re.DOTALL)
+    if not shareholders_match:
+         shareholders_match = re.search(r'IC/Passport/(.+?)MY DATA', raw_text, re.IGNORECASE | re.DOTALL)
+    
+    if shareholders_match:
+        share_text = shareholders_match.group(1)
+        
+        # Fix-5 Strategy: Line-by-line with IC removal
+        lines = share_text.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            if not line: continue
+            
+            # Skip headers
+            if re.match(r"^(Name|IC No|Passport|Company No|Total of|Shareholder|No\.|ID Type|Registration Name|Total Share)", line, re.IGNORECASE):
+                continue
+
+            # Check for IC pattern
+            ic_match = re.search(r'(\d{6}-\d{2}-\d{4})', line)
+            if ic_match:
+                ic = ic_match.group(1)
+                
+                # Remove IC from line to isolate Name and Shares
+                line_without_ic = line.replace(ic, '').strip()
+                
+                # Try to extract name and shares
+                # Pattern: NAME SHARES (with comma/spaces at end)
+                # Name is uppercase text, Shares is digits/commas at end
+                share_match = re.search(r'([A-Z\s\.\-\(\)]+)\s+([\d,\s]+)$', line_without_ic)
+                
+                if share_match:
+                    name = share_match.group(1).strip()
+                    shares_str = share_match.group(2).replace(',', '').replace(' ', '')
+                    
+                    try:
+                        shares_val = float(shares_str)
+                        
+                        # Filter out noise
+                        if name.upper() in ["NAME", "IC NO", "TOTAL", "SHARE"]: continue
+                        
+                        fields["shareholders"].append({
+                            "name": name,
+                            "idType": "NRIC",
+                            "idNo": ic,
+                            "shares": shares_val,
+                            "percent": 0.0
+                        })
+                    except: pass
+                else:
+                    # Fallback: Maybe just Name is left? 
+                    # If we can't find shares at the end, maybe it's on next line?
+                    # For now, let's stick to the robust pattern.
+                    pass
+
+    # 7a. Company Charges
+    ch_start = -1
+    ch_end = -1
+    for i, ln in enumerate(blocks):
+        if "COMPANY CHARGES" in ln.upper() or "PARTICULARS OF COMPANY CHARGES" in ln.upper():
+            ch_start = i
+            break
+            
+    if ch_start != -1:
+        # Find end (usually Financials or End of doc)
+        for i in range(ch_start + 1, len(blocks)):
+            if "SUMMARY OF FINANCIAL" in blocks[i].upper() or "FINANCIAL INFORMATION" in blocks[i].upper():
+                ch_end = i
+                break
+        if ch_end == -1: ch_end = len(blocks)
+        
+        # Check for "Nil" or "No Information"
+        section_text = " ".join(blocks[ch_start:ch_end]).upper()
+        if "NIL" in section_text or "NO INFORMATION" in section_text or "NO CHARGES" in section_text:
+            pass # Leave empty
+        else:
+            # Try to extract charge details
+            # This is complex as it's a table. For now, we'll try to extract simple objects if we see Charge No.
+            current_charge = None
+            for i in range(ch_start + 1, ch_end):
+                ln = blocks[i].strip()
+                # Skip headers
+                if "CHARGE NO" in ln.upper() or "DATE CREATED" in ln.upper():
+                    continue
+                    
+                # Heuristic: Charge No often starts with numbers or is distinct
+                # 1. Look for date (Date Created)
+                m_date = re.search(r"(\d{1,2}-\d{1,2}-\d{4})", ln)
+                if m_date:
+                    if current_charge: fields["charges"].append(current_charge)
+                    
+                    # Attempt to find Charge No in the same line (before date)
+                    # e.g. "001234 12-12-2020 Existing"
+                    charge_no = None
+                    parts = ln.split(m_date.group(1))
+                    if parts[0].strip():
+                        potential_no = parts[0].strip()
+                        # If it's just a number like "1." ignore
+                        if not re.match(r"^\d+\.$", potential_no):
+                             charge_no = potential_no
+                    
+                    current_charge = {
+                        "chargeNo": charge_no,
+                        "createDate": parse_date(m_date.group(1)),
+                        "status": "EXISTING", # Default assumption
+                        "amount": 0.0
+                    }
+                    # Try to find amount
+                    m_amt = re.search(r"([\d,]+\.\d{2})", ln)
+                    if m_amt:
+                        try:
+                            current_charge["amount"] = float(m_amt.group(1).replace(",", ""))
+                        except: pass
+                        
+                elif current_charge:
+                    # Append description or check for status
+                    if "SATISFIED" in ln.upper():
+                        current_charge["status"] = "SATISFIED"
+                    elif "FULLY SATISFIED" in ln.upper():
+                        current_charge["status"] = "FULLY SATISFIED"
+            
+            if current_charge: fields["charges"].append(current_charge)
+
+    # Calculate percentages
+    total_shares = fields["capital"]["issuedShareCapitalMYR"]
+    if total_shares > 0:
+        for sh in fields["shareholders"]:
+            sh["percent"] = round((sh["shares"] / total_shares) * 100, 4)
+
+    # 8. Financials - IMPROVED REGEX APPROACH (Fix-5)
+    fin_section = re.search(r'SUMMARY OF FINANCIAL INFORMATION(.+?)(?:END OF REPORT|User Id:|$)', raw_text, re.IGNORECASE | re.DOTALL)
+    
+    if fin_section:
+        fin_text = fin_section.group(1)
+        
+        # Auditor
+        auditor_match = re.search(r'Auditor\s*:\s*([^\n]+)', fin_text)
+        if auditor_match:
+            fields["financials"]["auditorName"] = auditor_match.group(1).strip()
+        
+        # Auditor Address
+        auditor_addr_match = re.search(r'Auditor Address\s*:\s*([^\n]+)', fin_text)
+        if auditor_addr_match:
+            fields["financials"]["auditorAddress"] = auditor_addr_match.group(1).strip()
+        
+        # Financial Year End
+        fye_match = re.search(r'Financial Year End\s*:\s*(\d{1,2}-\d{1,2}-\d{4})', fin_text)
+        if fye_match:
+            fields["financials"]["yearEnd"] = parse_date(fye_match.group(1))
+        
+        # Unqualified Report
+        unqual_match = re.search(r'Unqualified Reports\s*\([^)]+\)\s*:\s*([YN])', fin_text)
+        if unqual_match:
+            fields["financials"]["unqualifiedReport"] = (unqual_match.group(1) == 'Y')
+        
+        # Consolidated Accounts
+        consol_match = re.search(r'Consolidated Accounts\s*\([^)]+\)\s*:\s*([YN])', fin_text)
+        if consol_match:
+            fields["financials"]["consolidatedAccounts"] = (consol_match.group(1) == 'Y')
+
+        # Date of Tabling
+        tabling_match = re.search(r'Date of Tabling\s*:\s*(\d{1,2}-\d{1,2}-\d{4})', fin_text)
+        if tabling_match:
+            fields["financials"]["dateOfTabling"] = parse_date(tabling_match.group(1))
+        
+        # Extract all balance sheet items
+        bs_patterns = {
+            "nonCurrentAssets": r'Non-Current Assets\s*:\s*([\d\-,\.\(\)]+)',
+            "currentAssets": r'Current Assets\s*:\s*([\d\-,\.\(\)]+)',
+            "nonCurrentLiabilities": r'Non-Current Liabilities\s*:\s*([\d\-,\.\(\)]+)',
+            "currentLiabilities": r'Current Liabilities\s*:\s*([\d\-,\.\(\)]+)',
+            "shareCapital": r'Share Capital\s*:\s*([\d\-,\.\(\)]+)',
+            "reserves": r'Reserves\s*:\s*([\d\-,\.\(\)]+)',
+            "retainedEarnings": r'Retain Earning\s*:\s*([\d\-,\.\(\)]+)',
+            "minorityInterests": r'Minority Interest\s*:\s*([\d\-,\.\(\)]+)'
+        }
+        
+        bs = fields["financials"]["balanceSheet"]
+        for key, pattern in bs_patterns.items():
+            match = re.search(pattern, fin_text, re.IGNORECASE)
+            if match:
+                value_str = match.group(1).replace(' ', '') # Keep commas for clean_currency
+                bs[key] = clean_currency(value_str)
+
+        # Calculate Totals if missing
+        if "totalAssets" not in bs:
+            bs["totalAssets"] = bs.get("nonCurrentAssets", 0) + bs.get("currentAssets", 0)
+        if "totalLiabilities" not in bs:
+            bs["totalLiabilities"] = bs.get("nonCurrentLiabilities", 0) + bs.get("currentLiabilities", 0)
+            
+        # Calculate Equity
+        bs["equity"] = bs.get("shareCapital", 0) + bs.get("reserves", 0) + bs.get("retainedEarnings", 0) + bs.get("minorityInterests", 0)
+
+        # Extract income statement items
+        is_patterns = {
+            "revenue": r'Revenue\s*:\s*([\d\-,\.\(\)]+)',
+            "profitBeforeTax": r'before tax\s*:\s*([\d\-,\.\(\)]+)',
+            "profitAfterTax": r'after tax\s*:\s*([\d\-,\.\(\)]+)',
+            "netDividend": r'Net Dividend\s*:\s*([\d\-,\.\(\)]+)'
+        }
+        
+        is_stmt = fields["financials"]["incomeStatement"]
+        for key, pattern in is_patterns.items():
+            match = re.search(pattern, fin_text, re.IGNORECASE)
+            if match:
+                value_str = match.group(1).replace(' ', '')
+                is_stmt[key] = clean_currency(value_str)
+
+    # --- KYC RISK ASSESSMENT ---
+    if "balanceSheet" in fields["financials"]:
+        bs = fields["financials"]["balanceSheet"]
+        ca = bs.get("currentAssets", 0)
+        cl = bs.get("currentLiabilities", 0)
+        
+        if cl > 0:
+            current_ratio = ca / cl
+            fields["kycRiskAssessment"]["currentRatio"] = round(current_ratio, 2)
+            
+            # Fix-5 Logic for Financial Health
+            if current_ratio < 0.5:
+                fields["kycRiskAssessment"]["financialHealth"] = "HIGH RISK"
+            elif current_ratio < 1.0:
+                fields["kycRiskAssessment"]["financialHealth"] = "MODERATE RISK"
+            else:
+                fields["kycRiskAssessment"]["financialHealth"] = "LOW RISK"
+        else:
+            fields["kycRiskAssessment"]["currentRatio"] = "N/A"
+            fields["kycRiskAssessment"]["financialHealth"] = "NO LIABILITIES"
+
+    # UBO Concentration
+    total_shares = fields["capital"]["issuedShareCapitalMYR"]
+    if total_shares > 0 and fields["shareholders"]:
+        max_shares = 0
+        for sh in fields["shareholders"]:
+            if sh.get("shares", 0) > max_shares:
+                max_shares = sh.get("shares", 0)
+        
+        concentration = (max_shares / total_shares) * 100
+        fields["kycRiskAssessment"]["uboConcentration"] = round(concentration, 1)
+        
+        if concentration > 50:
+            fields["kycRiskAssessment"]["uboRisk"] = "HIGH"
+        elif concentration > 25:
+            fields["kycRiskAssessment"]["uboRisk"] = "MODERATE"
+        else:
+            fields["kycRiskAssessment"]["uboRisk"] = "LOW"
+            
+    # Operational Maturity (Years in Operation)
+    if fields["entity"]["incorporationDate"]:
+        try:
+            # Format from parse_date is YYYY-MM-DD
+            incorp_date = datetime.strptime(fields["entity"]["incorporationDate"], "%Y-%m-%d")
+            years = (datetime.now() - incorp_date).days / 365.25
+            fields["kycRiskAssessment"]["yearsInOperation"] = round(years, 1)
+            
+            if years > 5:
+                fields["kycRiskAssessment"]["operationalMaturity"] = "MATURE"
+            elif years > 2:
+                fields["kycRiskAssessment"]["operationalMaturity"] = "ESTABLISHED"
+            else:
+                fields["kycRiskAssessment"]["operationalMaturity"] = "NEW"
+        except:
+            pass
+
+    return fields

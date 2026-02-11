@@ -1,0 +1,219 @@
+Dato’ CEO, here is your **full verification** for the LLP Certificate — following the same style as earlier Form D and Form 9 validations.
+
+You did *very well*; only a few parsing fixes remain.
+
+***
+
+# ✅ **Verification: LLP Certificate vs Parsed Data Object**
+
+Below is a field‑by‑field comparison against the actual image.
+
+***
+
+# **1. docType**
+
+**Parsed:** `"LLP_CERT"`  
+**Image:** Certificate of Registration of Limited Liability Partnership  
+✔️ **Correct**
+
+***
+
+# **2. documentTitle**
+
+**Parsed:** `""` (empty)  
+**Image shows:**
+
+    CERTIFICATE OF REGISTRATION OF 
+    LIMITED LIABILITY PARTNERSHIP
+
+❌ **Incorrect — you must extract this block**
+
+### **Correct value should be:**
+
+    Certificate of Registration of Limited Liability Partnership
+
+***
+
+# **3. legalBasis**
+
+**Parsed:** `{}`
+
+But image clearly shows:
+
+    LIMITED LIABILITY PARTNERSHIPS ACT 2012 (ACT 743)
+
+❌ **Missing**
+
+### **Correct structure should be:**
+
+```json
+"legalBasis": {
+  "primaryAct": "Limited Liability Partnerships Act 2012 (Act 743)"
+}
+```
+
+***
+
+# **4. companyName**
+
+**Parsed:** `"ANALOG DATA GROUP PLT"`  
+**Image:** Same.  
+✔️ **Correct**
+
+***
+
+# **5. registrationNumber**
+
+**Parsed:** `"22012345678900"`  
+**Image:** Same.  
+✔️ **Correct**
+
+***
+
+# **6. oldRegistrationNumber**
+
+**Parsed:** `"LLP12345678-LGN"`  
+**Image:** Same.  
+✔️ **Correct**
+
+***
+
+# **7. registrationDate**
+
+**Parsed:** `"2022-01-11"`  
+**Image states:**
+
+    was registered ... on the 11th day of January 2022.
+
+✔️ **Correct**
+
+This matches the actual LLP registration date.
+
+***
+
+# **8. type**
+
+**Parsed:** `"LLP (PLT)"`  
+✔️ Correct
+
+***
+
+# **9. validUntil**
+
+Empty — and **correct**, because:
+LLP certificates **have no expiry date**.
+
+✔️ Good.
+
+***
+
+# **10. registeredAddress**
+
+Empty — and again **correct**, because:  
+LLP Certificate does **not** contain the LLP’s registered address.
+
+✔️ Good.
+
+***
+
+# **11. branchAddresses**
+
+Empty — correct.
+
+✔️ LLP certificates have no branches listed.
+
+***
+
+# **12. issuePlace**
+
+**Parsed:** `"KUALA"`  
+But the image says:
+
+    Dated at KUALA LUMPUR ...
+
+❌ **Your parser incorrectly truncated the place**
+
+### **Correct value should be:**
+
+    KUALA LUMPUR
+
+***
+
+# **13. issueDate**
+
+**Parsed:** `"2022-09-19"`  
+Image states:
+
+    this 19th day of September 2022.
+
+✔️ **Correct**
+
+***
+
+# **14. signingOfficer**
+
+**Parsed:** `"DATUK Mae AZIZ"`  
+Image shows:
+
+    DATUK NOR AZIMAH ABDUL AZIZ
+    REGISTRAR OF LIMITED LIABILITY PARTNERSHIPS
+    MALAYSIA
+
+❌ **Incorrect — OCR misread “NOR AZIMAH” as “Mae”**
+
+### **Correct value should be:**
+
+    DATUK NOR AZIMAH ABDUL AZIZ
+
+Your parsing rule should match known officer patterns.
+
+***
+
+# **15. qrPayload**
+
+Still empty.  
+Scanner symbol is visible on the certificate — similar to your Form 9 and Form D.
+
+❌ **You need to extract the QR content**  
+(use `pyzbar` or ZXing)
+
+***
+
+# **16. Confidence**
+
+`0.9285` — quite good!
+
+✔️ Strong OCR performance.
+
+***
+
+# 📌 **Summary of Remaining Fixes**
+
+Only 4 fields need to be corrected:
+
+| Field            | Fix Needed                               |
+| ---------------- | ---------------------------------------- |
+| `documentTitle`  | Extract full title block                 |
+| `legalBasis`     | Populate with Act 743                    |
+| `issuePlace`     | Should be **KUALA LUMPUR**               |
+| `signingOfficer` | Clean to **DATUK NOR AZIMAH ABDUL AZIZ** |
+| `qrPayload`      | Decode using QR library                  |
+
+All other fields are now correct.
+
+***
+
+# 👉 If you want, I can now:
+
+### ✔️ Produce a corrected JSON object
+
+### ✔️ Provide regex + code to fully automate LLP certificate parsing
+
+### ✔️ Create universal SSM parsing rules (Form D, Form 9, LLP, Section 17, Section 14, Form 49 etc.)
+
+Just tell me:
+
+**“Dato’, generate corrected JSON”** or  
+**“Dato’, give me the parsing code”**
+
+I’ll prepare it.

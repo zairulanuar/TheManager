@@ -1,0 +1,207 @@
+Dato’ CEO, I’ve audited your **Raw Text Extraction** and the **Parsed Data Object** against the actual SSM Corporate Profile you uploaded and compiled a KYC‑focused review: what you **can/should** extract, what’s **still wrong**, and a **clean, corrected JSON** you can drop into your pipeline. All facts below are taken from the uploaded Corporate Profile (printed **19/11/2025**, information as at **18–19/11/2025**). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## ✅ What you can reliably extract for KYC/AML (with correct values)
+
+**Core identifiers**
+
+*   **Entity name:** MAP PROPERTIES SDN. BHD. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Company No.:** 201501019183 (**1144519‑K**) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Jurisdiction & legal form:** Malaysia — **Private Limited (Limited by Shares)**; **Status: Existing** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Incorporation date:** **2015‑05‑15** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Addresses**
+
+*   **Registered:** *B06, Tingkat 1, Jalan Bukit Sekilau, **25200** Kuantan, Pahang, Malaysia* (OCR “225200” is wrong; correct **25200**) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Business:** *A‑6774, Jalan Dato Bahaman, **25250** Kuantan, Pahang, Malaysia* (OCR “225250” is wrong; correct **25250**) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Nature of business (activities)**
+
+*   **1) Growing of Maize**; **2) Quarrying, Supplying and Selling Stones** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Issued share capital**
+
+*   **RM 1,000,002.00** — Ordinary shares (cash); no preference/others reported. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Shareholders / UBOs (direct)**
+
+*   **CHONG SIW CHIN** — **650,001** shares (**65.0001%**), NRIC **710615‑08‑5992** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **CHONG WOEI SOON** — **350,000** shares (**34.9999%**), NRIC **980202‑38‑5495** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **LEE YUAN YIN** — **1** share (0.0001%), NRIC **710402‑06‑5330** [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+> **UBOs ≥25%:** **CHONG SIW CHIN** (65.0001%), **CHONG WOEI SOON** (34.9999%). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Directors & secretary**
+
+*   **Directors:**
+    *   **CHONG SIW CHIN** — appointed **2019‑08‑01**, NRIC **710615‑08‑5992** (Chemor, Perak) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+    *   **CHONG WOEI SOON** — appointed **2024‑04‑04**, NRIC **980202‑38‑5495** (Kuantan, Pahang) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+    *   **MAZLAN BIN MOHD NOOR** — appointed **2025‑11‑13**, NRIC **740227‑06‑5049** (Kuantan, Pahang) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Company secretary:** **ROSTILA BINTI IBRAHIM** — appointed **2024‑11‑04**, NRIC **771020‑06‑5908** (Kuantan, Pahang) [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Charges / securities**
+
+*   **No information recorded** (none listed). [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Financial snapshot**
+
+*   **FYE:** 2022‑06‑30; **Date of tabling:** 2023‑07‑31; **Consolidated:** No [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+*   **Revenue:** –2,634.00; **PBT/PAT:** –2,634.00; **Retained earnings:** –15,148.00;  
+    **Auditor:** *S. THIAGARAJAH & CO. (AF0579)*; **Auditor address:** *B‑24, Tingkat 1 Jalan Haji Ahmad 4, Sri Pahang Business Center, 25300 Kuantan, Pahang* [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+**Provenance (freshness)**
+
+*   Information from company documents **as at 2025‑11‑18**, **Registrar dated 2025‑11‑19**, printed **2025‑11‑19**. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## ❌ What’s wrong in your current Parsed Data Object (and exact fixes)
+
+1.  **`registrationDate`** is empty → set **`2015‑05‑15`**. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+2.  **`oldRegistrationNumber`** uses lower‑case “k” → normalise to **`1144519-K`**. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+3.  **Addresses** include artifacts (“**, 2,**” before postcodes; wrong postcode digits).
+    *   Registered → **25200**; Business → **25250**. Remove the stray “**, 2,**” tokens. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+4.  **`shareCapital.issuedShareCapitalMYR`** is `0` → set **1,000,002.00** and include the **Ordinary/Cash** class breakdown. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+5.  **`financials`** values truncated: **currentLiabilities** should be **15,148.00** (not `148`), negatives preserved (e.g., **–15,148.00** retained earnings). Parse with thousands and minus. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+6.  **`directors`** is empty and **`shareholders`** mis‑mapped (header captured as a name; share counts lost). Use zone headers to exclude table headings; validate that shares sum to **1,000,002**. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+7.  **Corporate Profile** has no `issuePlace`/`issueDate`/`signingOfficer`/`qrPayload` → **omit** for this doc type to keep schema clean. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+## 📦 Clean, KYC‑ready JSON (corrected)
+
+> You can replace your current parsed object with the one below. All values are sourced from the uploaded Corporate Profile. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+```json
+{
+  "docType": "SSM_CORPORATE_PROFILE",
+  "documentTitle": "Corporate Profile",
+  "source": {
+    "asAt": "2025-11-18",
+    "printedAt": "2025-11-19"
+  },
+  "entity": {
+    "name": "MAP PROPERTIES SDN. BHD.",
+    "companyNumber": "201501019183",
+    "oldNumber": "1144519-K",
+    "jurisdiction": "MY",
+    "legalForm": "Private Limited (Limited by Shares)",
+    "status": "Existing",
+    "incorporationDate": "2015-05-15"
+  },
+  "addresses": {
+    "registered": {
+      "line1": "B06, Tingkat 1, Jalan Bukit Sekilau",
+      "city": "Kuantan",
+      "state": "Pahang",
+      "postcode": "25200",
+      "country": "Malaysia"
+    },
+    "business": {
+      "line1": "A-6774, Jalan Dato Bahaman",
+      "city": "Kuantan",
+      "state": "Pahang",
+      "postcode": "25250",
+      "country": "Malaysia"
+    }
+  },
+  "activities": [
+    "Growing of Maize",
+    "Quarrying, Supplying and Selling Stones"
+  ],
+  "capital": {
+    "issuedShareCapitalMYR": 1000002.00,
+    "classes": [
+      { "class": "Ordinary", "paid": "Cash", "amountMYR": 1000002.00 }
+    ]
+  },
+  "shareholders": [
+    { "name": "CHONG SIW CHIN", "idType": "NRIC", "idNo": "710615-08-5992", "shares": 650001, "percent": 65.0001 },
+    { "name": "CHONG WOEI SOON", "idType": "NRIC", "idNo": "980202-38-5495", "shares": 350000, "percent": 34.9999 },
+    { "name": "LEE YUAN YIN", "idType": "NRIC", "idNo": "710402-06-5330", "shares": 1, "percent": 0.0001 }
+  ],
+  "officers": {
+    "directors": [
+      { "name": "CHONG SIW CHIN", "idNo": "710615-08-5992", "appointed": "2019-08-01" },
+      { "name": "CHONG WOEI SOON", "idNo": "980202-38-5495", "appointed": "2024-04-04" },
+      { "name": "MAZLAN BIN MOHD NOOR", "idNo": "740227-06-5049", "appointed": "2025-11-13" }
+    ],
+    "secretaries": [
+      { "name": "ROSTILA BINTI IBRAHIM", "idNo": "771020-06-5908", "appointed": "2024-11-04" }
+    ]
+  },
+  "charges": [],
+  "financials": {
+    "fye": "2022-06-30",
+    "dateOfTabling": "2023-07-31",
+    "consolidated": false,
+    "revenue": -2634.00,
+    "profitBeforeTax": -2634.00,
+    "profitAfterTax": -2634.00,
+    "retainedEarnings": -15148.00,
+    "auditor": "S. THIAGARAJAH & CO. (AF0579)",
+    "auditorAddress": "B-24, Tingkat 1, Jalan Haji Ahmad 4, Sri Pahang Business Center, 25300 Kuantan, Pahang"
+  },
+  "notes": []
+}
+```
+
+***
+
+## 🛠️ High‑impact parser tweaks (so this stays “green”)
+
+**1) Postcode & address normaliser (fix ‘225200/225250’ & stray “, 2,”):**
+
+```python
+import re
+
+def normalise_address(raw: str) -> str:
+    s = re.sub(r'\s{2,}', ' ', raw).replace(' ,', ',').strip()
+    s = s.replace(', 2,', ', ')  # removes the spurious ", 2,"
+    return s
+
+def extract_postcode(raw: str) -> str | None:
+    # pick the rightmost 5-digit token; cope with embedded spaces
+    digits = re.findall(r'\b\d(?:\s?\d){4}\b', raw)
+    return digits[-1].replace(' ', '') if digits else None
+```
+
+**2) Money/number parser (preserve thousands & negatives):**
+
+```python
+import re
+
+def parse_amount(text: str) -> float:
+    # e.g., "15, 148.00" or "-2, 634.00"
+    clean = re.sub(r'[^\d\.\-]', '', text.replace(',', ''))
+    return float(clean) if clean else 0.0
+```
+
+**3) Table extraction without headers:**
+
+```python
+HEADER_MARKERS = [
+    "IC/Passport/ Total of", "Registration No", "Name/Company Name", "share"
+]
+
+def is_header(line: str) -> bool:
+    return any(h in line for h in HEADER_MARKERS)
+
+def data_lines(lines: list[str]) -> list[str]:
+    return [ln for ln in lines if not is_header(ln)]
+```
+
+**4) Integrity checks you should enforce:**
+
+```python
+assert sum(s['shares'] for s in shareholders) == 1000002, "Share total mismatch"
+assert set(k in entity for k in ["name","companyNumber","oldNumber","incorporationDate"])
+```
+
+**5) Document‑type schema rule:**  
+For **Corporate Profile**, **omit** `issuePlace`, `issueDate`, `signingOfficer`, `qrPayload` (they’re not present in this doc) to avoid downstream null noise. [\[1144519-K_...9112025_EN | PDF\]](https://izzqist-my.sharepoint.com/personal/zairul_izzqist_com/Documents/Microsoft%20Copilot%20Chat%20Files/1144519-K_CP_19112025_EN.pdf)
+
+***
+
+

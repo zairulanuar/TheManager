@@ -1,0 +1,110 @@
+Thanks, Dato’ CEO. I reviewed the **raw Tesseract text** and your **parsed object** against the image. Here’s what’s right, what’s off, and how to fix it—plus a **clean, corrected JSON** you can drop into your KYC flow.
+
+***
+
+## ✅ What your parser got right
+
+*   **Company name:** `ANALOG DATA SDN BHD` — correct.
+*   **New SSM number:** `190933432134` — correct 12‑digit format (YYYY + 8 digits).
+*   **Old ROC number:** `1234567-H` — correct.
+*   **Issue place:** `KL` — matches “Dated at KL …”.
+*   **Dates:** `2007-06-07` for both **issue** and **incorporation** — correct normalization from “7th day of June 2007”.
+*   **Type:** `Sdn. Bhd. (Private Limited)` — appropriate for Form 9.
+
+***
+
+## ⚠️ OCR artifacts in the raw text (normal for Tesseract)
+
+These don’t break your parsed object but explain odd strings:
+
+*   Header noise: `SVARTUAT MALAYSIA we ( |` (logo & watermark near the top).
+*   Missing ordinals: “**7 day**” instead of “**7th day**”.
+*   Mid‑sentence insert: “**is 2 private company**” (should be “is a private company.”).
+*   Officer’s name truncated: `DATUK NOR ABDUL AZIZ` — missing middle **“AZIMAH”** and **“ABDUL”** appears without **“AZIZ”** correctly ordered in the image.
+*   Typos like **“vorlly”** (for “verify”), **“Thess certficate es”** etc. (footer/watermark areas are noisy).
+
+These are typical when pages have **watermarks, serif fonts, superscripts** (“th”), and small text near **QR/graphics**.
+
+***
+
+## 🎯 Corrections I recommend for your parsed fields
+
+1.  **Normalize officer’s name**  
+    From OCR: `DATUK NOR ABDUL AZIZ`  
+    **Correct:** `DATUK NOR AZIMAH ABDUL AZIZ`  
+    *Heuristic:* If line contains “REGISTRAR OF COMPANIES”, scan **one line above** and allow minor Levenshtein edits to recover **“AZIMAH”**.
+
+2.  **Keep “validUntil”, “registeredAddress”, “branchAddresses” empty**  
+    Standard **Form 9** does **not** include registered address or validity period—your object correctly leaves them blank.
+
+3.  **Keep “qrPayload” empty** (unless you decode the QR)  
+    The raw alphanumeric line near the QR is inconsistent; rely on an actual **QR decode** when available.
+
+***
+
+## ✨ Clean, corrected JSON (normalized)
+
+Use this as the output of your extractor for this image:
+
+```json
+{
+  "doc_type": "FORM_9",
+  "document_title": "Certificate of Incorporation of Private Company",
+  "entity": {
+    "name": "ANALOG DATA SDN BHD",
+    "business_type": "Sdn. Bhd. (Private Limited)",
+    "registration_number_new": "190933432134",
+    "registration_number_old": "1234567-H"
+  },
+  "dates_and_place": {
+    "incorporation_date": "2007-06-07",
+    "issue_place": "KL",
+    "issue_date": "2007-06-07"
+  },
+  "officer": {
+    "signing_officer_name": "DATUK NOR AZIMAH ABDUL AZIZ",
+    "signing_officer_title": "Registrar of Companies, Malaysia"
+  },
+  "verification": {
+    "qr_payload": "",
+    "note": "QR not decoded; line near QR is noisy in OCR. Decode QR for authoritative verification."
+  },
+  "extras": {
+    "legal_basis": ["Companies Act 2016 (Act 777)", "Companies Act 1965"],
+    "footer_notes": [
+      "A copy or extract issued pursuant to Section 601(2).",
+      "This certificate is generated from MYDATA SSM Services.",
+      "MENARA SSM@SENTRAL, NO.7, JALAN STESEN SENTRAL 5, KUALA LUMPUR SENTRAL, 50470 KUALA LUMPUR.",
+      "TEL : 03-2209 4400  FAX : 03-2209 4411"
+    ]
+  },
+  "source_file": "sample-cert-form-9-SDN-BHD.jpg",
+  "confidence": 0.8729
+}
+```
+
+***
+
+## 🛠️ How to make Tesseract (or any OCR) more reliable on these certificates
+
+1.  **Preprocess**
+    *   **Deskew** and **binarize**; upscale 1.5× for small serif text.
+    *   Mask or blur **watermark diagonals** lightly to reduce false positives.
+    *   Crop out **logos/QR blocks** when extracting body text.
+
+2.  **Fix ordinals & common confusions**
+    *   Regex: replace `\b(\d{1,2})\b day of` → `\1th day of` when month follows.
+    *   Map **KL/KE/K1/K|** → **KL** in the `Dated at <..> this` pattern.
+
+3.  **Officer line heuristic**
+    *   When a line contains `REGISTRAR OF COMPANIES`, take the **preceding non‑empty line** as the officer name and pass it through a small **dictionary-based correction** (e.g., “NOR AZIMAH”).
+
+4.  **Post‑parse validation**
+    *   Ensure **new SSM number** matches `^(19|20)\d{10}$`.
+    *   Ensure **old ROC** matches `^\d{6,7}-[A-Z]$`.
+    *   Dates parse to `YYYY‑MM‑DD`.
+
+5.  **Optional**: Add a **post‑OCR LLM** step (CPU‑friendly) to clean sentences and re‑confirm fields; latency \~50–200 ms, negligible compared to OCR time.
+
+***
+

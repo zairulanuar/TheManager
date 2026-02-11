@@ -1,0 +1,236 @@
+Absolutely, Dato’ CEO — I’ve **redone your Form 9 extractor** to be robust, fast, and drop‑in compatible with your existing project structure.
+
+Below you’ll find:
+
+1.  **What I fixed** (quick summary)
+2.  **Drop‑in replacement** for `app/extractor/form_9.py`
+3.  **Minimal unit test** you can run now
+4.  **Notes** on expected outputs and options
+
+***
+
+## 1) What I fixed (at a glance)
+
+*   **12‑digit SSM regex**: your fallback pattern was broken by a line break inside `(19|20)`, so it never matched. I replaced it with a clean compiled regex and safe fallback.
+*   **Return value**: your function was returning `fields, "FileName": ...` which is invalid Python; now it returns **only the dict**.
+*   **Entity name**: the company name is usually on the **line after** “This is to certify that”; the code now prioritizes that and cleans out any numbers in parentheses.
+*   **Issue place**: replaced `.split(" ", 3)` with a **regex** that reliably extracts the place in “Dated at \_\_\_ this …” lines, e.g., “KL” or “KUALA LUMPUR”.
+*   **Registered address**: Form 9 typically **does not** include an address. I kept an **optional** extraction (keys: “registered office at” / “alamat berdaftar”) but it won’t produce false positives.
+*   **Signing officer**: smarter back‑tracking from “REGISTRAR OF COMPANIES” line to pick the actual name (e.g., “DATUK NOR AZIMAH ABDUL AZIZ”).
+
+***
+
+## 2) Drop‑in replacement — `app/extractor/form_9.py`
+
+> Save this as **`app/extractor/form_9.py`** (overwriting the old one).  
+> It depends on your existing helpers in `.rules_base` (`pick_new_no`, `pick_old_no`, `parse_date`, `normalize_text`).
+
+```python
+# app/extractor/form_9.py
+from __future__ import annotations
+import re
+from .rules_base import pick_new_no, pick_old_no, parse_date, normalize_text
+
+# Clean, compiled patterns
+NEW_SSM_RE      = re.compile(r"\b(19|20)\d{2}\d{8}\b", re.I)  # 12-digit SSM: YYYY + 8 digits
+ISSUE_PLACE_RE  = re.compile(r"^dated at\s+([A-Za-z\.\s]+?)\s+this\b", re.I)
+
+def _next_nonempty(blocks: list[str], start: int) -> str | None:
+    j = start + 1
+    while j < len(blocks) and not blocks[j].strip():
+        j += 1
+    return blocks[j].strip() if j < len(blocks) else None
+
+def _clean_entity(candidate: str, new_no: str | None, old_no: str | None) -> str:
+    s = candidate or ""
+    # Remove any registration numbers embedded in the name line
+    for token in filter(None, [new_no, old_no]):
+        s = s.replace(token, "")
+    # Remove leftover parentheses artifacts
+    s = s.replace("()", "").replace("(-)", "")
+    # Collapse spaces and trim punctuation
+    s = re.sub(r"\s{2,}", " ", s)
+    return s.strip(" ,.-")
+
+def extract_form_9(lines: list[str]) -> dict:
+    """
+    Extracts key fields from an SSM Form 9 (Certificate of Incorporation of Private Company).
+    Returns a dict ready for serialization.
+    """
+    # Normalize input lines
+    blocks = [ln for ln in lines if ln and ln.strip()]
+    text   = normalize_text("\n".join(blocks))
+
+    fields: dict = {
+        "doc_type": "FORM_9",
+        "entity_name": None,
+        "business_type": "Sdn. Bhd. (Private Limited)",
+        "registration_number_new": None,
+        "registration_number_old": None,
+        "incorporation_or_registration_date": None,
+        "valid_until": None,
+        "registered_address": None,   # Typically not present on Form 9
+        "branch_addresses": [],
+        "issue_place": None,
+        "issue_date": None,
+        "signing_officer": None
+    }
+
+    # --- Registration numbers ---
+    fields["registration_number_new"] = pick_new_no(text)
+    if not fields["registration_number_new"]:
+        m = NEW_SSM_RE.search(text)
+        if m:
+            fields["registration_number_new"] = m.group(0)
+
+    fields["registration_number_old"] = pick_old_no(text)
+
+    # --- Entity name ---
+    # 1) Prefer the line *after* the "This is to certify that" line.
+    for i, ln in enumerate(blocks):
+        if "certify that" in ln.lower():
+            name = _next_nonempty(blocks, i) or ln.split("certify that", 1)[-1].strip()
+            name = _clean_entity(name, fields["registration_number_new"], fields["registration_number_old"])
+            if len(name) > 3:
+                fields["entity_name"] = name
+                break
+
+    # 2) Fallbacks: lines ending with SDN. BHD. / BHD. / BERHAD / SDNBHD
+    if not fields["entity_name"]:
+        priority_caps = [
+            ln.strip() for ln in blocks
+            if ln.strip().upper().endswith(("SDN. BHD.", "BHD.", "BERHAD", "SDNBHD"))
+            and len(ln.strip()) > 5
+        ]
+        if priority_caps:
+            fields["entity_name"] = _clean_entity(priority_caps[0],
+                                                  fields["registration_number_new"],
+                                                  fields["registration_number_old"])
+        else:
+            # 3) Longest ALL‑CAPS line minus obvious headers
+            exclusions = {
+                "COMPANIES ACT", "CERTIFICATE OF INCORPORATION", "MALAYSIA",
+                "SECTION 17", "FORM 9", "PRIVATE COMPANY", "LIMITED BY SHARES"
+            }
+            caps = [
+                ln.strip() for ln in blocks
+                if ln.strip().isupper() and len(ln.strip()) > 5
+                and not any(ex in ln.upper() for ex in exclusions)
+            ]
+            if caps:
+                fields["entity_name"] = _clean_entity(sorted(caps, key=len, reverse=True)[0],
+                                                      fields["registration_number_new"],
+                                                      fields["registration_number_old"])
+
+    # --- Dates & Issue place ---
+    for ln in blocks:
+        low = ln.lower()
+
+        # Incorporation date: "is, on and from the 7th day of June 2007, ..."
+        if "on and from the" in low or "incorporated under" in low:
+            fields["incorporation_or_registration_date"] = parse_date(ln)
+
+        # Issue date & place: "Dated at KL this 7th day of June 2007."
+        if low.startswith("dated at"):
+            fields["issue_date"] = parse_date(ln)
+            place_m = ISSUE_PLACE_RE.search(ln)
+            if place_m:
+                fields["issue_place"] = place_m.group(1).strip(" ,.")
+
+        # Signing officer: find the name above "Registrar of Companies"
+        if "registrar of companies" in low:
+            idx = blocks.index(ln)
+            for k in range(idx - 1, -1, -1):
+                prev = blocks[k].strip()
+                prev_low = prev.lower()
+                # stop scanning upward at major separators
+                if "dated at" in prev_low or "certify that" in prev_low:
+                    break
+                # ignore serials and QR codes
+                if sum(c.isdigit() for c in prev) > 6:
+                    continue
+                if len(prev) >= 3:
+                    fields["signing_officer"] = prev
+                    break
+            if not fields["signing_officer"]:
+                fields["signing_officer"] = ln.strip()
+
+    # --- Optional: Registered address (rare on Form 9) ---
+    # Only capture if a clear anchor exists. Otherwise, leave None.
+    for i, ln in enumerate(blocks):
+        low = ln.lower()
+        if "registered office at" in low or "alamat berdaftar" in low:
+            addr_parts = []
+            if " at" in low:
+                remainder = ln.split(" at", 1)[-1].strip(" :-")
+            elif ":" in ln:
+                remainder = ln.split(":", 1)[-1].strip(" :-")
+            else:
+                remainder = ""
+            if remainder:
+                addr_parts.append(remainder)
+            j = i + 1
+            while j < len(blocks):
+                nxt = blocks[j].strip()
+                nlow = nxt.lower()
+                # stop at new sections / footer
+                if nlow.startswith("dated at") or "registrar of companies" in nlow or "scan to verify" in nlow:
+                    break
+                if len(nxt) < 3:
+                    break
+                addr_parts.append(nxt)
+                j += 1
+            address = ", ".join(p.strip(" ,") for p in addr_parts if p)
+            if address:
+                fields["registered_address"] = address
+            break
+
+    return fields
+```
+
+***
+
+## 3) Minimal unit test (paste into `tests/test_form_9.py`)
+
+```python
+# tests/test_form_9.py
+from app.extractor.form_9 import extract_form_9
+
+SAMPLE_BLOCKS = [
+    "COMPANIES ACT 2016 (ACT 777)",
+    "CERTIFICATE OF INCORPORATION OF PRIVATE COMPANY",
+    "This is to certify that",
+    "ANALOG DATA SDN BHD",
+    "190933432134 (1234567-H)",
+    "is, on and from the 7th day of June 2007, incorporated under the Companies Act 1965,",
+    "and that the company is a company limited by shares and that the company is a private company.",
+    "Dated at KL this 7th day of June 2007.",
+    "DATUK NOR AZIMAH ABDUL AZIZ",
+    "REGISTRAR OF COMPANIES MALAYSIA"
+]
+
+def test_extract_form_9_minimal():
+    fields = extract_form_9(SAMPLE_BLOCKS)
+    assert fields["doc_type"] == "FORM_9"
+    assert fields["entity_name"] == "ANALOG DATA SDN BHD"
+    assert fields["registration_number_new"] == "190933432134"
+    assert fields["registration_number_old"] == "1234567-H"
+    assert fields["incorporation_or_registration_date"] == "2007-06-07"
+    assert fields["issue_place"] == "KL"
+    assert fields["issue_date"] == "2007-06-07"
+    assert fields["signing_officer"].upper().startswith("DATUK")
+```
+
+> This mirrors the image you shared; adjust strings if your OCR emits slight variations (e.g., extra spaces).
+
+***
+
+## 4) Notes & options
+
+*   **Registered address**: It’s normal to be **`None`** for Form 9. Don’t force it.
+*   **Malay months**/**ordinals**: Ensure your `parse_date()` in `rules_base` already handles “7th day of June 2007” and Malay month names; if you want I can patch that as well.
+*   **Other doc types**: I can apply the same refactor to your **Form D** and **LLP** extractors for consistency.
+
+***
+
+### Want me to patch the other extractors too and bundle a quick test corpus (golden JSON) so your CI flags any regressions?

@@ -1,0 +1,165 @@
+Dato’ CEO, I’ve reviewed your **Raw OCR Text**, **Parsed Data Object**, and the **actual Form 9 certificate image**, and here is a **precise verification** of what is correct, what is wrong, and what must be fixed in your detection/parsing logic.
+
+This is similar to your Form D extraction progress — your OCR quality is improving, but your **parsing rules** still need refinement.
+
+***
+
+# ✅ **1. What the Parsed Data Object Got Correct**
+
+The following fields are **correct** and match the certificate:
+
+| Field                                 | Status | Remarks                                           |
+| ------------------------------------- | ------ | ------------------------------------------------- |
+| **docType**                           | ✔️     | Correct: FORM 9 = Certificate of Incorporation    |
+| **documentTitle**                     | ✔️     | Extracted accurately                              |
+| **legalBasis.primaryAct**             | ✔️     | “Companies Act 2016 (Act 777)”                    |
+| **legalBasis.incorporationReference** | ✔️     | “Companies Act 1965”                              |
+| **companyName**                       | ✔️     | “ANALOG DATA SDN BHD” matches image               |
+| **registrationNumber**                | ✔️     | “190933432134” correct                            |
+| **oldRegistrationNumber**             | ✔️     | “1234567-H” correct                               |
+| **type**                              | ✔️     | Sdn. Bhd. (Private Limited)                       |
+| **issuePlace**                        | ✔️     | “KL” appears correctly                            |
+| **issueDate**                         | ✔️     | Correctly parsed to ISO: “2007-06-07”             |
+| **confidence**                        | ✔️     | 0.8899 is reasonable for this type of certificate |
+
+These fields need no further adjustment.
+
+***
+
+# ❌ **2. What Is Incorrect or Missing**
+
+## **❌ A) `registrationDate` is empty**
+
+But the certificate clearly states:
+
+> “on and from the 7th day of June 2007, incorporated under…”
+
+This means the **registration date is also 07 June 2007**.
+
+### ✔️ Correct value should be:
+
+    registrationDate: "2007-06-07"
+
+### 🔧 How to fix:
+
+Regex example:
+
+```regex
+on and from the\s+(\d{1,2})(?:st|nd|rd|th)?\s+day of\s+([A-Za-z]+)\s+(\d{4})
+```
+
+***
+
+## **❌ B) `validUntil` is empty — but for Form 9 this should be null or omitted**
+
+Form 9 *does not have an expiry date*.  
+Your parser is correct to leave it blank, but **you should explicitly set**:
+
+    validUntil: null
+
+or remove it entirely.
+
+Better to enforce consistency across all document types.
+
+***
+
+## **❌ C) `registeredAddress` is empty**
+
+This is actually **correct**, because Form 9 certificates **do not contain a registered office address**.
+
+Instead, the registered address appears in **Form 44 / Section 46 Notices**, not Form 9.
+
+So you can safely treat this field as:
+
+    registeredAddress: null
+
+or simply exclude it.
+
+***
+
+## **❌ D) `signingOfficer` contains noise**
+
+Current extracted value:
+
+    "SSN.) 8 Svea DATUK NOR AZIMAH ABDUL AZIZ"
+
+Image shows:
+
+**DATUK NOR AZIMAH ABDUL AZIZ  
+REGISTRAR OF COMPANIES  
+MALAYSIA**
+
+The OCR noise ("SSN.) 8 Svea") came from the signature area.
+
+### ✔️ Correct value:
+
+    signingOfficer: "DATUK NOR AZIMAH ABDUL AZIZ"
+
+### 🔧 Fix using regex:
+
+```python
+officer = re.search(r"(DATUK\s+NOR\s+AZIMAH\s+ABDUL\s+AZIZ)", text)
+```
+
+This will cut out all surrounding garbage.
+
+***
+
+# ❌ **3. Missing QR Code Payload**
+
+Field:
+
+    "qrPayload": ""
+
+But the Form 9 contains a QR code with an encoded payload (e.g., certificate info, tracking code).
+
+### 🔧 Fix:
+
+Use pyzbar or ZXing:
+
+```python
+from pyzbar.pyzbar import decode
+qr = decode(image)
+if qr:
+    qrPayload = qr[0].data.decode("utf-8")
+```
+
+***
+
+# 📌 **4. Summary of What You Should Update in Your Detection Pipeline**
+
+### ✅ Keep existing logic for:
+
+*   docType
+*   companyName
+*   reg numbers
+*   legalBasis
+*   signing officer (after cleaning)
+*   issue dates
+*   type
+
+### ❗ Must Update:
+
+1.  **Extract registrationDate from "on and from the 7th day of June 2007"**
+2.  **Strip noise from signingOfficer**
+3.  **Set validUntil = null for Form 9**
+4.  **registeredAddress = null (Form 9 does not contain this)**
+5.  **Decode and populate qrPayload**
+
+These five fixes will give you near‑perfect accuracy for Form 9 certificates.
+
+***
+
+# 🔥 If you want me to produce:
+
+✔️ **Corrected final JSON for this certificate**  
+✔️ **Regex + code for each field**  
+✔️ **A universal SSM document extraction template (Form D, Form 9, Section 17, Section 14, Form 49, etc.)**
+
+just tell me:
+
+**“Dato’, generate corrected JSON”**  
+or  
+**“Dato’, give me the parsing code”**
+
+I’m ready when you are.

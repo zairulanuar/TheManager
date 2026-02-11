@@ -1,0 +1,178 @@
+
+
+## 🏢 **COMPLETE KYC DATA EXTRACTION - MAP PROPERTIES SDN. BHD.**
+
+### **1. COMPANY IDENTIFICATION**
+- **Full Legal Name:** MAP PROPERTIES SDN. BHD.
+- **Registration Number:** 201501019183
+- **Old Registration Number:** 1144519-K
+- **Company Type:** Private Limited Company (Limited by Shares)
+- **Status:** EXISTING
+- **Incorporation Date:** 15-05-2015
+- **Business Nature:** 
+  1. Growing of maize
+  2. Quarrying, supplying and selling stones
+
+### **2. REGISTRATION DETAILS**
+- **Registry Authority:** Companies Commission of Malaysia (SSM)
+- **Document Issue Date:** 19-11-2025
+- **Data as of Date:** 18-11-2025
+- **SSM User ID:** QUORUM661782
+
+### **3. ADDRESS INFORMATION**
+**Registered Address:**
+- Address: B06, Tingkat 1, Jalan Bukit Sekilau
+- City: Kuantan
+- State: Pahang
+- Postcode: 25200
+- Country: Malaysia
+
+**Business Address:**
+- Address: A-6774, Jalan Dato Bahaman
+- City: Kuantan
+- State: Pahang
+- Postcode: 25250
+- Country: Malaysia
+
+### **4. CAPITAL STRUCTURE**
+**Total Issued Share Capital:** RM 1,000,002.00
+**Share Class Distribution:**
+- Ordinary Shares: 1,000,002 shares (Cash)
+- Preference Shares: 0
+- Others: 0
+
+### **5. SHAREHOLDERS & BENEFICIAL OWNERS**
+
+| No. | Name | NRIC/Passport | Shareholding | Percentage |
+|-----|------|--------------|--------------|------------|
+| 1. | CHONG SIW CHIN | 710615-08-5992 | 650,001 shares | ~65.00% |
+| 2. | CHONG WOEI SOON | 980202-38-5495 | 350,000 shares | ~34.99% |
+| 3. | LEE YUAN YIN | 710402-06-5330 | 1 share | ~0.01% |
+
+**Total Shares:** 1,000,002 shares (100%)
+
+### **6. DIRECTORS & OFFICERS**
+
+| No. | Name | Position | NRIC/Passport | Appointment Date | Address |
+|-----|------|----------|--------------|------------------|---------|
+| 1. | CHONG SIW CHIN | Director | 710615-08-5992 | 01-08-2019 | 183 Kuala Kuang, 31200 Chemor, Perak |
+| 2. | CHONG WOEI SOON | Director | 980202-38-5495 | 04-04-2024 | 77 Jalan Kubang Buaya, 25250 Kuantan, Pahang |
+| 3. | MAZLAN BIN MOHD NOOR | Director | 740227-06-5049 | 13-11-2025 | No. 10, Lorong Bukit Setongkol 44, Taman Cenderawasih Indah, 25200 Kuantan, Pahang |
+| 4. | ROSTILA BINTI IBRAHIM | Secretary | 771020-06-5908 | 04-11-2024 | A137-1, Jalan Tun Ismail 6, 25000 Kuantan, Pahang |
+
+### **7. FINANCIAL INFORMATION**
+**Auditor Details:**
+- Firm: S. THIAGARAJAH & CO. (AF0579)
+- Address: B-24, Tingkat 1, Jalan Haji Ahmad 4, Sri Pahang Business Center, 25300 Kuantan, Pahang
+
+**Financial Year End:** 30-06-2022
+**Audit Status:** Unqualified Report (Yes)
+**Consolidated Accounts:** No
+**Date of Tabling:** 31-07-2023
+
+**Balance Sheet (MYR):**
+- Non-Current Assets: 0.00
+- Current Assets: 2.00
+- **Total Assets:** 2.00
+- Non-Current Liabilities: 0.00
+- Current Liabilities: 15,148.00
+- **Total Liabilities:** 15,148.00
+- Share Capital: 2.00
+- Reserve: 0.00
+- Retained Earnings: -15,148.00
+- Minority Interest: 0.00
+
+**Income Statement (MYR):**
+- Revenue: 0.00
+- Profit/(Loss) Before Tax: -2,634.00
+- Profit/(Loss) After Tax: -2,634.00
+- Net Dividend: 0.00
+
+### **8. CHARGES & ENCUMBRANCES**
+- **Company Charges:** No Information (No charges registered)
+
+### **9. RED FLAGS / RISK INDICATORS**
+1. **Financial Health:** Negative retained earnings (-15,148.00)
+2. **Low Activity:** Minimal assets (RM 2.00) and no revenue
+3. **Recent Director Changes:** New director appointed in November 2025
+4. **Shareholding Concentration:** Two major shareholders control ~99.99%
+
+
+---
+
+## 🔧 **PARSING IMPROVEMENTS NEEDED:**
+
+Your current parsing logic should be adjusted to:
+
+```json
+{
+  "companyName": "MAP PROPERTIES SDN. BHD.",
+  "registrationNumber": "201501019183",
+  "oldRegistrationNumber": "1144519-K",
+  "incorporationDate": "15-05-2015",
+  "type": "PRIVATE LIMITED BY SHARES",
+  "status": "EXISTING",
+  "registeredAddress": {
+    "line1": "B06, TINGKAT 1 JALAN BUKIT SEKILAU",
+    "city": "KUANTAN",
+    "state": "PAHANG",
+    "postcode": "25200",
+    "country": "MALAYSIA"
+  },
+  "businessAddress": {
+    "line1": "A-6774, JALAN DATO BAHAMAN",
+    "city": "KUANTAN",
+    "state": "PAHANG",
+    "postcode": "25250",
+    "country": "MALAYSIA"
+  },
+  "natureOfBusiness": [
+    "GROWING OF MAIZE",
+    "QUARRYING, SUPPLYING AND SELLING STONES"
+  ],
+  "shareCapital": {
+    "totalIssued": 1000002.00,
+    "classes": [
+      {
+        "type": "ORDINARY",
+        "shares": 1000002,
+        "paymentType": "CASH"
+      }
+    ]
+  },
+  "directors": [
+    {
+      "name": "CHONG SIW CHIN",
+      "idType": "NRIC",
+      "idNo": "710615-08-5992",
+      "position": "DIRECTOR",
+      "appointmentDate": "01-08-2019",
+      "address": "183 KUALA KUANG, 31200 CHEMOR, PERAK"
+    }
+  ],
+  "shareholders": [
+    {
+      "name": "CHONG SIW CHIN",
+      "idType": "NRIC",
+      "idNo": "710615-08-5992",
+      "shares": 650001,
+      "percentage": 65.00
+    }
+  ],
+  "financials": {
+    "yearEnd": "30-06-2022",
+    "auditor": "S. THIAGARAJAH & CO. (AF0579)",
+    "unqualifiedReport": true,
+    "balanceSheet": {
+      "totalAssets": 2.00,
+      "totalLiabilities": 15148.00,
+      "equity": -15146.00
+    },
+    "incomeStatement": {
+      "revenue": 0.00,
+      "netLoss": 2634.00
+    }
+  }
+}
+```
+
