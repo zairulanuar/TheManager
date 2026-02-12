@@ -37,9 +37,9 @@ export default async function SystemLayout({ children }: { children: React.React
   return (
     <DynamicThemeProvider themes={themes}>
       <div className="flex h-screen overflow-hidden bg-background">
-        <Sidebar user={user} permissions={permissions} />
+        {/* <Sidebar user={user} permissions={permissions} /> */}
         <div className="flex flex-col flex-1 overflow-hidden">
-           <Header user={user} />
+           <Header user={user} permissions={permissions} />
            <main className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/10 p-6 md:p-8">
               <div className="mx-auto max-w-7xl space-y-8">
                   {children}

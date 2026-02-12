@@ -28,10 +28,11 @@ import { logoutAction } from "@/app/auth/actions";
 
 interface HeaderProps {
   user: any;
+  permissions?: any[];
   onMenuClick?: () => void;
 }
 
-export default function Header({ user, onMenuClick }: HeaderProps) {
+export default function Header({ user, permissions = [], onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const { setTheme, theme } = useTheme();
@@ -46,13 +47,13 @@ export default function Header({ user, onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-4">
         <Sheet>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden" suppressHydrationWarning>
+                <Button variant="ghost" size="icon" suppressHydrationWarning>
                     <Menu size={20} />
                 </Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-72">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <SidebarContent />
+                <SidebarContent user={user} permissions={permissions} />
             </SheetContent>
         </Sheet>
         

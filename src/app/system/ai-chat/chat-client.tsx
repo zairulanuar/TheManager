@@ -59,11 +59,11 @@ export default function ChatClient({ initialSessions, userRole, userId, userName
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load latest session on mount if exists
-  useEffect(() => {
-    if (sessions.length > 0 && !currentSessionId) {
-        loadSession(sessions[0].id);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (sessions.length > 0 && !currentSessionId) {
+  //       loadSession(sessions[0].id);
+  //   }
+  // }, []);
 
   const loadSession = async (sessionId: string) => {
     if (currentSessionId === sessionId) return;
