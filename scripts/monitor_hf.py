@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-token = os.environ.get("HF_TOKEN")
-space_id = "zairulanuar/ocr"
-url = f"https://huggingface.co/api/spaces/{space_id}/logs/run"
+token = os.environ.get("HF_TOKEN_MALAY") or os.environ.get("HF_TOKEN")
+space_id = "zairulanuar/malaylanguage-mcp"
+url = f"https://huggingface.co/api/spaces/{space_id}/logs/build"
 
 print(f"Starting log monitor for {space_id}...")
 print("Filtering out verbose array dumps. Press Ctrl+C to stop.")

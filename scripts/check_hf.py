@@ -3,8 +3,8 @@ from huggingface_hub import HfApi, get_space_runtime
 from dotenv import load_dotenv
 
 load_dotenv()
-
-token = os.environ.get("HF_TOKEN")
+# Try specific token first, then fallback to generic
+token = os.environ.get("HF_TOKEN_OCR") or os.environ.get("HF_TOKEN")
 space_id = "zairulanuar/ocr" # inferred from zairulanuar-ocr.hf.space
 
 print(f"Checking space: {space_id}")

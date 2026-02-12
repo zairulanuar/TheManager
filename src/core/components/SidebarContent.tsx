@@ -33,64 +33,77 @@ interface SidebarContentProps {
     onCollapse?: () => void;
     className?: string;
     user?: any;
+    permissions?: any[];
 }
 
-export default function SidebarContent({ collapsed = false, onCollapse, className, user }: SidebarContentProps) {
+export default function SidebarContent({ collapsed = false, onCollapse, className, user, permissions = [] }: SidebarContentProps) {
     const pathname = usePathname();
 
     const isSuperAdmin = user?.roleType === 'SUPER_ADMIN' || user?.role?.type === 'SUPER_ADMIN';
 
-    const navGroups = [
+    const rawNavGroups = [
         {
             label: "Overview",
             items: [
-                { name: 'Dashboard', href: '/system/dashboard', icon: LayoutDashboard },
-                { name: 'Analytics', href: '/system/analytics', icon: BarChart3 },
+                { name: 'Dashboard', href: '/system/dashboard', icon: LayoutDashboard, key: 'overview.dashboard' },
+                { name: 'Analytics', href: '/system/analytics', icon: BarChart3, key: 'overview.analytics' },
             ]
         },
         {
             label: "Management",
             items: [
-                { name: 'Organizations', href: '/system/organizations', icon: Building2 },
+                { name: 'Organizations', href: '/system/organizations', icon: Building2, key: 'management.organizations' },
             ]
         },
         {
             label: "User Management",
             items: [
-                { name: 'Users', href: '/system/users', icon: Users },
-                { name: 'Roles & Permissions', href: '/system/roles', icon: Shield },
+                { name: 'Users', href: '/system/users', icon: Users, key: 'user_management.users' },
+                { name: 'Roles & Permissions', href: '/system/roles', icon: Shield, key: 'user_management.roles' },
             ]
         },
         {
             label: "Settings",
             items: [
-                { name: 'Settings', href: '/system/tenant-settings', icon: Settings },
+                { name: 'Settings', href: '/system/tenant-settings', icon: Settings, key: 'settings.tenant' },
             ]
         },
         {
             label: "KYC",
             items: [
-                { name: 'Company KYC', href: '/system/kyc/company', icon: Shield },
+                { name: 'Company KYC', href: '/system/kyc/company', icon: Shield, key: 'kyc.company' },
             ]
         },
         {
             label: "BestLa Assistant",
             items: [
-                { name: 'BestLa Chat', href: '/system/ai-chat', icon: Bot },
+                { name: 'BestLa Chat', href: '/system/ai-chat', icon: Bot, key: 'assistant.chat' },
             ]
         },
-        ...(isSuperAdmin ? [{
+        {
             label: "System Settings",
             items: [
-                { name: 'Applications Settings', href: '/system/settings', icon: Settings },
-                { name: 'Packages', href: '/system/packages', icon: Package },
-                { name: 'Billings', href: '/system/billings', icon: CreditCard },
-                { name: 'Payment Gateways', href: '/system/payment-gateways', icon: CreditCard },
-                { name: 'Modules', href: '/system/modules', icon: Blocks },
-                { name: 'SSM Verification Test', href: '/system/ssm-verification-test', icon: Shield },
+                { name: 'Applications Settings', href: '/system/settings', icon: Settings, key: 'system.settings' },
+                { name: 'Packages', href: '/system/packages', icon: Package, key: 'system.packages' },
+                { name: 'Billings', href: '/system/billings', icon: CreditCard, key: 'system.billings' },
+                { name: 'Payment Gateways', href: '/system/payment-gateways', icon: CreditCard, key: 'system.gateways' },
+                { name: 'Modules', href: '/system/modules', icon: Blocks, key: 'system.modules' },
+                { name: 'SSM Verification Test', href: '/system/ssm-verification-test', icon: Shield, key: 'system.ssm' },
             ]
-        }] : [])
+        }
     ];
+
+    const navGroups = rawNavGroups.map(group => ({
+        ...group,
+        items: group.items.filter(item => {
+            if (isSuperAdmin) return true;
+            // If permissions not loaded yet (shouldn't happen with server component passing it), default to safe
+            if (!permissions) return false; 
+            
+            const perm = permissions.find((p: any) => p.moduleKey === item.key);
+            return perm?.canView;
+        })
+    })).filter(group => group.items.length > 0);
 
     // Use mounted state to avoid hydration mismatch
     const [mounted, setMounted] = React.useState(false);
@@ -150,7 +163,7 @@ export default function SidebarContent({ collapsed = false, onCollapse, classNam
                             </div>
                         ))
                     ) : (
-                        <Accordion type="multiple" defaultValue={["Overview", "Management", "User Management", "System Settings", "Settings", "KYC", "AI Assistant"]} className="w-full">
+                        <Accordion type="multiple" defaultValue={["Overview", "Management", "User Management", "System Settings", "Settings", "KYC", "BestLa Assistant"]} className="w-full">
                             {navGroups.map((group) => (
                                 <AccordionItem value={group.label} key={group.label} className="border-none">
                                     <AccordionTrigger className="py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:no-underline hover:text-foreground">

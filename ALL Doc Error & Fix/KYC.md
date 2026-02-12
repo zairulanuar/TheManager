@@ -9,7 +9,7 @@ Below is a **ready-to-build, self‑hosted, and free** OCR service blueprint tai
 *   **Open‑source OCR**: **PaddleOCR + PP‑Structure** (better layout handling than Tesseract).
 *   **Field extractors** tuned for **Form D (Enterprise)**, **Form 9 (Sdn. Bhd.)**, and **LLP** certificates.
 *   **Validation** of **new 12‑digit SSM reg no.** vs **legacy numbers** + **date normalization**.
-*   **Optional** CPU LLM normalizer (**Microsoft BitNet b1.58**) — fully offline; improves borderline cases.
+*   **Optional** CPU LLM normalizer (**TinyLlama / Local LLM**) — fully offline; improves borderline cases.
 *   **Human‑in‑the‑loop** review for low‑confidence extractions.
 *   **JSON output** your KYC/KTV backend can ingest immediately.
 
@@ -61,7 +61,7 @@ Below is a **ready-to-build, self‑hosted, and free** OCR service blueprint tai
     │  │  ├─ form_9.py            # Form 9 field logic
     │  │  └─ llp.py               # LLP field logic
     │  ├─ schemas.py              # Pydantic response models
-    │  ├─ text_normalizer.py      # (optional) BitNet / rule-based normalization
+    │  │  ├─ text_normalizer.py      # (optional) Local LLM / rule-based normalization
     │  └─ settings.py             # env config
     ├─ tests/
     │  ├─ test_form_d.py
@@ -516,9 +516,7 @@ curl -F "file=@sample-cert-form-9-SDN-BHD.jpg" http://localhost:8080/extract
 
 ***
 
-## 8) Optional: CPU LLM normalizer (still fully offline)
 
-If you want extra resilience on **lower‑quality scans**, plug in a tiny CPU LLM (e.g., **Microsoft BitNet b1.58**) for **post‑OCR normalization** (e.g., fixing spacing, joining broken lines, classifying edge cases). It runs **on CPU only** (\~400 MB), so no GPU/cost impact. I can wire this as a **post‑processing step** with a 50–100 ms budget per doc.
 
 ***
 

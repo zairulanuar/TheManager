@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 from huggingface_hub import HfApi
 
 load_dotenv()
-token = os.environ.get("HF_TOKEN")
+# Try specific token first, then fallback to generic
+token = os.environ.get("HF_TOKEN_OCR") or os.environ.get("HF_TOKEN")
 repo_id = "zairulanuar/ocr"
 file_paths = [
     ("scripts/hf_space/app.py", "app.py"),

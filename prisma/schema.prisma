@@ -187,6 +187,27 @@ model User {
   account        Account?         @relation(fields: [accountId], references: [id])
 
   permissions    UserPermission[]
+  chatSessions   ChatSession[]
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  title     String
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String // 'user' or 'assistant'
+  content   String
+  images    String[]
+  createdAt DateTime    @default(now())
 }
 
 model ModuleConfig {

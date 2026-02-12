@@ -58,14 +58,14 @@ export function AiSettingsSection({ settings }: AiSettingsSectionProps) {
               <Label htmlFor="apiUrl">API URL</Label>
               <Input
                 id="apiUrl"
-                placeholder="http://localhost:11434/v1"
+                placeholder="https://api.provider.com/v1"
                 {...register('apiUrl', { required: 'API URL is required' })}
               />
               {errors.apiUrl && (
                 <p className="text-sm text-red-500">{errors.apiUrl.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                The base URL for the OpenAI-compatible API (e.g., local Ollama instance or BitNet).
+                The base URL for the OpenAI-compatible API.
               </p>
             </div>
 
@@ -110,7 +110,7 @@ export function AiSettingsSection({ settings }: AiSettingsSectionProps) {
                 <Label htmlFor="systemPrompt">System Prompt</Label>
                 <Input
                     id="systemPrompt"
-                    placeholder="You are a helpful AI assistant."
+                    placeholder="You are BestLa Ai..."
                     {...register('systemPrompt')}
                 />
                 <p className="text-xs text-muted-foreground">

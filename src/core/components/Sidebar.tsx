@@ -6,10 +6,11 @@ import SidebarContent from './SidebarContent';
 
 interface SidebarProps {
     user: any;
+    permissions?: any[];
     className?: string;
 }
 
-export default function Sidebar({ user, className }: SidebarProps) {
+export default function Sidebar({ user, permissions = [], className }: SidebarProps) {
     const [collapsed, setCollapsed] = useState(false);
 
     return (
@@ -24,6 +25,7 @@ export default function Sidebar({ user, className }: SidebarProps) {
                 collapsed={collapsed} 
                 onCollapse={() => setCollapsed(!collapsed)}
                 user={user}
+                permissions={permissions}
             />
         </aside>
     );

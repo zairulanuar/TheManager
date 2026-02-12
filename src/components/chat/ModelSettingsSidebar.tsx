@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AppSettings } from '@/lib/useSettings';
+import { AppSettings, DEFAULT_AI_SYSTEM_PROMPT } from '@/lib/useSettings';
 import { Settings2, RotateCcw } from 'lucide-react';
 
 interface ModelSettingsSidebarProps {
@@ -15,6 +15,7 @@ interface ModelSettingsSidebarProps {
   onSettingsChange: (newSettings: AppSettings['ai']) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isSuperAdmin: boolean;
 }
 
 import { Link as LinkIcon, Lock, Cpu } from 'lucide-react';
@@ -22,7 +23,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 // ... existing imports ...
 
-export function ModelSettingsSidebar({ settings, onSettingsChange, open, onOpenChange }: ModelSettingsSidebarProps) {
+export function ModelSettingsSidebar({ settings, onSettingsChange, open, onOpenChange, isSuperAdmin }: ModelSettingsSidebarProps) {
   
   const handleChange = (key: keyof AppSettings['ai'], value: any) => {
     onSettingsChange({
@@ -43,6 +44,7 @@ export function ModelSettingsSidebar({ settings, onSettingsChange, open, onOpenC
 
         <div className="grid gap-6 py-6">
           
+          {isSuperAdmin && (
           <Accordion type="single" collapsible defaultValue="connection">
             <AccordionItem value="connection">
                 <AccordionTrigger className="text-sm font-medium">Connection Settings</AccordionTrigger>
@@ -84,6 +86,7 @@ export function ModelSettingsSidebar({ settings, onSettingsChange, open, onOpenC
                 </AccordionContent>
             </AccordionItem>
           </Accordion>
+          )}
 
           {/* Preset - Placeholder for now */}
           <div className="grid gap-2">
@@ -108,9 +111,9 @@ export function ModelSettingsSidebar({ settings, onSettingsChange, open, onOpenC
             </div>
             <Textarea 
                 id="systemPrompt" 
-                placeholder="Example, 'Only answer in rhymes'" 
+                placeholder={`Define the AI's role, tone, and constraints.\nExample: 'You are an expert financial advisor. Provide detailed analysis but avoid investment advice.'\n\nLeave empty to use the default BestLa configuration.`} 
                 className="min-h-[100px]"
-                value={settings.systemPrompt || ''}
+                value={settings.systemPrompt === DEFAULT_AI_SYSTEM_PROMPT ? '' : settings.systemPrompt || ''}
                 onChange={(e) => handleChange('systemPrompt', e.target.value)}
             />
           </div>

@@ -60,6 +60,21 @@ export interface AppSettings {
   };
 }
 
+export const DEFAULT_AI_SYSTEM_PROMPT = `You are BestLa Ai, the intelligent assistant for 'The Manager', a comprehensive ERP platform available on web and mobile.
+Your purpose is to assist users across various integrated modules including:
+- Human Resources (HR)
+- Finance & Accounting
+- Project Management
+- Ar-Rahnu (Islamic Pawnbroking)
+- Gold Investment
+- Cooperative (Coop) Membership Management
+
+Guidelines:
+1. Identity: Always identify yourself as 'BestLa Ai'.
+2. Tone: Professional, efficient, and helpful.
+3. Context Awareness: Understand that you are operating within a business environment.
+4. Language: Respond in the same language as the user. If the user uses "Bahasa" or speaks Malay (Bahasa Melayu), strictly use standard Malay (Bahasa Melayu) and DO NOT use Indonesian (Bahasa Indonesia). Prioritize Bahasa Melayu over Bahasa Indonesia at all times.`;
+
 const DEFAULT_SETTINGS: AppSettings = {
   branding: {
     siteName: 'The Manager',
@@ -103,17 +118,19 @@ const DEFAULT_SETTINGS: AppSettings = {
     paymentGatewayMode: 'test',
   },
   ai: {
-    apiUrl: 'http://localhost:11434/v1',
+    apiUrl: 'https://api.helmholtz-blablador.fz-juelich.de/v1',
     apiKey: '',
-    modelName: 'llama3',
+    modelName: 'alias-fast',
     maxTokens: 2048,
     temperature: 0.7,
     topP: 0.9,
     topK: 40,
     repeatPenalty: 1.1,
-    systemPrompt: 'You are a helpful AI assistant.',
+    systemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
   }
 };
+
+const OLD_DEFAULT_SYSTEM_PROMPT = 'You are a helpful AI assistant.';
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -139,7 +156,15 @@ export function useSettings() {
              if (s.key === 'AI_TOP_P') merged.ai.topP = parseFloat(s.value) || 0.9;
              if (s.key === 'AI_TOP_K') merged.ai.topK = parseInt(s.value, 10) || 40;
              if (s.key === 'AI_REPEAT_PENALTY') merged.ai.repeatPenalty = parseFloat(s.value) || 1.1;
-             if (s.key === 'AI_SYSTEM_PROMPT') merged.ai.systemPrompt = s.value;
+             
+             // Smart upgrade for system prompt:
+             // If the DB has the old default, or no value, use the new BestLa Ai default.
+             if (s.key === 'AI_SYSTEM_PROMPT') {
+                 if (s.value && s.value !== OLD_DEFAULT_SYSTEM_PROMPT) {
+                     merged.ai.systemPrompt = s.value;
+                 }
+                 // If s.value is the old default, we do nothing, so it stays as DEFAULT_SETTINGS.ai.systemPrompt (the new default)
+             }
           }
         });
 
